@@ -175,7 +175,7 @@ _OKCP.fileQuestions.sex =
 				"qid":"64476",
 				"text":"Under the right circumstances, would you allow a partner to lick your anus?",
 				"answerText": ["Yes.", "No."],
-				"score": [1, -1],
+				"score": [-1, 1],
 				"weight": [1, 1]
 			},
 			{
@@ -765,7 +765,7 @@ _OKCP.fileQuestions.sex =
 				"qid":"64476",
 				"text":"Under the right circumstances, would you allow a partner to lick your anus?",
 				"answerText": ["Yes.", "No."],
-				"score": [1, -1],
+				"score": [-1, 1],
 				"weight": [1, 1]
 			},
 			{ //Added by RAA

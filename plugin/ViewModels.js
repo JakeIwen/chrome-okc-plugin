@@ -274,13 +274,13 @@ function applyBindingsToProfileThumb (objList, scopeOfBindingsStr, retry, largeT
 	} else if (objList.length === 0) {
 		return false;
 	}
-	if (retry) console.log(objList);
+	if (retry) console.log({objList});
 	var scopeOfBindings = document.querySelector(scopeOfBindingsStr);
 	if (scopeOfBindings === null) return false;
 	objList.each(function() {
 		var thumbName = this.thumbName;
 		var dataBind = 'css: {'+
-			'"okcp-hidden": profileListData()["'+thumbName+'"] ? profileList()["'+thumbName+'"].h == true : false,'+
+			'"okcp-hidden": profileListData()["'+thumbName+'"] ? profileList()["'+thumbName+'"].h == true : false,' + 
 			'"okcp-no-answers": profileListData()["'+thumbName+'"] ? profileList()["'+thumbName+'"].d == true : false,'+
 			'"okcp-maybe": profileListData()["'+thumbName+'"] ? profileList()["'+thumbName+'"].m == true : false,'+
 			'"okcp-poly": profileListData()["'+thumbName+'"] ? profileList()["'+thumbName+'"].ip == true : false,'+
@@ -292,7 +292,10 @@ function applyBindingsToProfileThumb (objList, scopeOfBindingsStr, retry, largeT
 		}
 		$(this).attr('data-bind',dataBind);
 	});
-	ko.applyBindings(OKCP, scopeOfBindings);
+		console.log();
+		ko.cleanNode(scopeOfBindings);
+		ko.applyBindings(OKCP, scopeOfBindings);
+
 	return true;
 }
 

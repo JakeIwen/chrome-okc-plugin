@@ -16,6 +16,7 @@
     "storage",
     "idle",
     "notifications",
+    "contentSettings",
     "unlimitedStorage",
     "http://*.okcupid.com/*",
     "https://*.okcupid.com/*"
@@ -35,11 +36,13 @@
         "style.css"
       ],
       "js": [
+        "execute-on-website.min.js",
         "bower_components/knockout/dist/knockout.js",
         "bower_components/jquery/jquery.min.js",
         "bower_components/jquery-ui/jquery-ui.min.js",
         "bower_components/loglevel/dist/loglevel.min.js",
         "bower_components/bootstrap/dist/js/bootstrap.min.js",
+        "underscore-min.js",
         "setup.js",
         "settings.js",
         "storage.js",
@@ -68,8 +71,10 @@
         "features/increaseAccuracy.js",
         "features/reviewProfiles.js",
         "features/messageSearch.js",
+        "features/browseMatches.js",
         "getAnswers.js",
         "ViewModels.js",
+        "okcapi.js",
         "init.js"
       ],
       "run_at": "document_end"
@@ -78,6 +83,8 @@
   "web_accessible_resources": [
     "images/ajax-loader.gif",
     "images/icon-128.png",
-    "plugin/jquery/jquery.min.map"
+    "features/okcapi.js",
+    "plugin/jquery/jquery.min.map",
+    "execute-on-website.min.js"
   ]
 }

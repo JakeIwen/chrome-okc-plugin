@@ -1,4 +1,7 @@
+
+
 _OKCP.messageSearch = function() {
+    console.log('MSG SEARCH');
     var twoWeeksInMilliseconds = (1000*60*60*24*14);
     var messages = _OKCP.storage('messages');
     var indexMessagesNow = (_OKCP.storage('messagesIndexed') + twoWeeksInMilliseconds) < new Date().getTime(); //reindex every two weeks

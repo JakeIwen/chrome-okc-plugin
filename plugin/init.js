@@ -3,6 +3,7 @@ $(function(){
 	var onPageQuestions = $('#questions').length > 0;
 	var onPageMailbox = $('#p_mailbox').length > 0;
 	var onPageProfile = $('#p_profile').length > 0;
+	var onBrowseMatches = window.location.pathname=='/match'
 
 	localStorage.reallyClear = localStorage.clear;
 	localStorage.clear = function() {
@@ -10,8 +11,8 @@ $(function(){
 		console.log('if you called `localStorage.clear()` intentionally, it\'s been reassigned to `localStorage.reallyClear()`');
 	}
 
-	if (_OKCP.devmode) _OKCP.initDevMode();
-
+	// if (_OKCP.devmode) _OKCP.initDevMode();
+	_OKCP.initDevMode();
 	// Questions Pages
 	if (onPageQuestions)
 		_OKCP.initSuggestQuestionsFeature(); // question suggestion feature
@@ -27,6 +28,13 @@ $(function(){
 	if (onPageProfile) {
 		_OKCP.getAnswers(); // get answers and add categories
 		_OKCP.messageSearch(); // check to see if you've messaged them before
+	}
+	
+	if (onBrowseMatches) {
+		console.log('MATCHES');
+		console.log(_OKCP);
+		_OKCP.browseMatches();
+		
 	}
 
 	// initialize large thumbnail viewer

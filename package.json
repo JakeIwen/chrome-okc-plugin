@@ -14,5 +14,8 @@
     "grunt-contrib-compress": "^0.5",
     "grunt-contrib-watch": "^0.5",
     "grunt-open": "^0.2"
+  },
+  "dependencies": {
+    "underscore": "^1.9.1"
   }
 }

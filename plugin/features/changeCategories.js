@@ -1,4 +1,4 @@
-_OKCP.changeCategories = function(){
+_OKCP.changeCategories = function() {
 
 	var storage = JSON.parse(localStorage.okcp);
 	var currCategories = storage.questionCategories;
