@@ -36,7 +36,6 @@
         "style.css"
       ],
       "js": [
-        "execute-on-website.min.js",
         "bower_components/knockout/dist/knockout.js",
         "bower_components/jquery/jquery.min.js",
         "bower_components/jquery-ui/jquery-ui.min.js",
@@ -85,6 +84,5 @@
     "images/icon-128.png",
     "features/okcapi.js",
     "plugin/jquery/jquery.min.map",
-    "execute-on-website.min.js"
   ]
 }
