@@ -120,15 +120,15 @@ if (_OKCP.profilePath === '') {
 	$('#profile_ad').hide();
 
 	// Give the guilt banner a class so we can hide it
-	var counter = 0;
-	var guiltBannerHiderTimer = setInterval(function() {
-		counter++;
-		var guiltBanner = $('.quickbuybox').prev('div:not("#main_content")');
-		if (counter >= 5000 || guiltBanner.size() > 0) {
-			guiltBanner.addClass('guilt');
-			clearInterval(guiltBannerHiderTimer);
-		}
-	}, 1);
+	// var counter = 0;
+	// var guiltBannerHiderTimer = setInterval(function() {
+	// 	counter++;
+	// 	var guiltBanner = $('.quickbuybox').prev('div:not("#main_content")');
+	// 	if (counter >= 5000 || guiltBanner.size() > 0) {
+	// 		guiltBanner.addClass('guilt');
+	// 		clearInterval(guiltBannerHiderTimer);
+	// 	}
+	// }, 1);
 })();
 
 var stateAbbr = {"Alaska" : "AK", "Alabama" : "AL", "Arkansas" : "AR", "American Samoa" : "AS", "Arizona" : "AZ", "California" : "CA", "Colorado" : "CO", "Connecticut" : "CT", "District of Columbia" : "DC", "Delaware" : "DE", "Florida" : "FL", "Georgia" : "GA", "Guam" : "GU", "Hawaii" : "HI", "Iowa" : "IA", "Idaho" : "ID", "Illinois" : "IL", "Indiana" : "IN", "Kansas" : "KS", "Kentucky" : "KY", "Louisiana" : "LA", "Massachusetts" : "MA", "Maryland" : "MD", "Maine" : "ME", "Michigan" : "MI", "Minnesota" : "MN", "Missouri" : "MO", "Mississippi" : "MS", "Montana" : "MT", "North Carolina" : "NC", "North Dakota" : "ND", "Nebraska" : "NE", "New Hampshire" : "NH", "New Jersey" : "NJ", "New Mexico" : "NM", "Nevada" : "NV", "New York" : "NY", "Ohio" : "OH", "Oklahoma" : "OK", "Oregon" : "OR", "Pennsylvania" : "PA", "Puerto Rico" : "PR", "Rhode Island" : "RI", "South Carolina" : "SC", "South Dakota" : "SD", "Tennessee" : "TN", "Texas" : "TX", "Utah" : "UT", "Virginia" : "VA", "Virgin Islands" : "VI", "Vermont" : "VT", "Washington" : "WA", "Wisconsin" : "WI", "West Virginia" : "WV", "Wyoming" : "WY"};

@@ -72,6 +72,8 @@
         "features/messageSearch.js",
         "features/browseMatches.js",
         "getAnswers.js",
+        "getBrowseAnswers.js",
+        "getHoverAnswers.js",
         "ViewModels.js",
         "okcapi.js",
         "init.js"
@@ -83,6 +85,6 @@
     "images/ajax-loader.gif",
     "images/icon-128.png",
     "features/okcapi.js",
-    "plugin/jquery/jquery.min.map",
+    "plugin/jquery/jquery.min.map"
   ]
 }

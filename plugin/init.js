@@ -11,8 +11,8 @@ $(function(){
 		console.log('if you called `localStorage.clear()` intentionally, it\'s been reassigned to `localStorage.reallyClear()`');
 	}
 
-	// if (_OKCP.devmode) _OKCP.initDevMode();
-	_OKCP.initDevMode();
+	if (_OKCP.devmode) _OKCP.initDevMode();
+
 	// Questions Pages
 	if (onPageQuestions)
 		_OKCP.initSuggestQuestionsFeature(); // question suggestion feature
