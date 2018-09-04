@@ -2,11 +2,11 @@ _OKCP.getHoverAnswers = function ($card, list) {
 	var name = $($card).find('[href]')[0].href.split('profile/')[1].split('?')[0]
 ;
 	// $('.match-ratios-wrapper-outer-hover.'+name) && $('.match-ratios-wrapper-outer-hover.'+name).remove();
-	$('.match-ratios-wrapper-outer-hover') && $('.match-ratios-wrapper-outer-hover').remove();
+	$('.match-ratios-wrapper-outer-hover.'+name) && $('.match-ratios-wrapper-outer-hover.'+name).remove();
 	
-	var ratioList = $('<table class="match-ratios-wrapper-outer-hover"><tr><td class="match-ratios">'+
+	var ratioList = $('<table class="match-ratios-wrapper-outer-hover '+name+'"><tr><td class="match-ratios">'+
 	// var ratioList = $('<table class="match-ratios-wrapper-outer-hover '+name+'"><tr><td class="match-ratios">'+
-		'<ul class="match-ratios-list-hover"></ul>'+
+		'<ul class="match-ratios-list-hover '+name+'"></ul>'+
 		'</td></tr></table>');
 	
 	$($card).prepend(ratioList);
@@ -67,27 +67,20 @@ _OKCP.getHoverAnswers = function ($card, list) {
 				var num = listItem.qid;
 				var possibleAnswers = listItem.answerText;
 				// var questionElem = $('#question_' + num + '[public]');		//misses some
-				var questionElem = $('#question_' + num);
+				var questionElem = $($card).find('#question_' + num);
 
 				// if question isn't present on page, continue
 				if (questionElem.length === 0) {continue;}
-
 				// get question information
 				var questionText = questionElem.find('.qtext').text().trim();
 				if (questionText === "") continue;
 
-			    if (_OKCP.onOwnProfile) {
-				// TODO: Fix own profile view - we need the text of the label which follows the <input>
-				// element that is checked
-					theirAnswer = questionElem.find(".my_answer input:checked + label").text().trim();
-					theirNote = questionElem.find(".explanation textarea").text().trim();
-				} else {
-					theirAnswer = questionElem.find("#answer_target_"+num).text().trim();
-					if (theirAnswer === '') continue; //if the answer elem doesn't exist, continue
-					theirNote   = questionElem.find("#note_target_"+num).text().trim();
-					yourAnswer  = questionElem.find("#answer_viewer_"+num).text().trim();
-					yourNote    = questionElem.find("#note_viewer_"+num).text().trim();
-				}
+				theirAnswer = questionElem.find("#answer_target_"+num).text().trim();
+				if (theirAnswer === '') continue; //if the answer elem doesn't exist, continue
+				theirNote   = questionElem.find("#note_target_"+num).text().trim();
+				yourAnswer  = questionElem.find("#answer_viewer_"+num).text().trim();
+				yourNote    = questionElem.find("#note_viewer_"+num).text().trim();
+			
 				for (var j = 0; j < possibleAnswers.length; j++) {
 					// console.log(questionText + "  " + theirAnswer + " | " + wrongAnswers[j]);
 					if (possibleAnswers[j] === theirAnswer) {
@@ -129,11 +122,11 @@ _OKCP.getHoverAnswers = function ($card, list) {
 
 	function loadProfileAnswers() {
 		//loop through every question page
-		$('#page-results') && $('#page-results').remove();
-		$('.page-results-link') && $('.page-results-link').remove();
+		// $('#page-results') && $('#page-results').remove();
+		// $('.page-results-link') && $('.page-results-link').remove();
 		
-		var pageResultsDiv = $('<div id="page-results"></div>').appendTo('body');
-		$('#footer').append('<a class="page-results-link" href="#page-results">Show question results</a>');
+		var pageResultsDiv = $('<div class="page-results"></div>').appendTo($card);
+		// $($card).append('<a class="page-results-link" href="#page-results">Show question results</a>');
 
 		while (!requestFailed && numRequestsMade < _OKCP.numQuestionPages) {
 			updateQuestionPath();
@@ -141,7 +134,7 @@ _OKCP.getHoverAnswers = function ($card, list) {
 			numRequestsMade++;
 			
 			//add page results, parse the page
-			$('<div id="page-results-' + questionPageNum + '"></div>')
+			$('<div class="page-results-' + questionPageNum + '"></div>')
 				.appendTo(pageResultsDiv)
 				.load(questionPath, loadData);
 		}
@@ -180,11 +173,11 @@ _OKCP.getHoverAnswers = function ($card, list) {
 			localStorage.okcpRecentProfiles = JSON.stringify(recentProfiles);
 
 			$('.spinner').fadeOut(300);
+			$('.page-results').remove();
 			_OKCP.getHoverAnswersFinished = true;
 		}
 		
-		$('.match-ratios-list-hover').html('');
-		$('.question-detail > ul').remove();
+		$('.match-ratios-list-hover.'+name).html('');
 		for (var category in responseCount) {
 			var countArr = responseCount[category];
 			var matchClass = 'match-' + Math.floor(countArr[0]/countArr[1]*5);
@@ -206,61 +199,17 @@ _OKCP.getHoverAnswers = function ($card, list) {
 			if (denominator*1 <= 0.5) continue;
 			var matchRatioHtmlValue = '<span class="integer">' + numeratorArr[0] + '</span><span class="point">.</span><span class="decimal">'+(numeratorArr[1] || '0')+'</span><span class="slash">/</span><span class="integer">' + denominatorArr[0] + '</span><span class="point">.</span><span class="decimal">'+(denominatorArr[1] || '0')+'</span>';
 			$('<li class="match-ratio ' + matchClass + '" category="'+category+'"><span class="match-ratio-progressbar ' + matchClass + '" style="width:' + (Math.round(countArr[0]/countArr[1]*93)+7) + '%"></span><span class="match-ratio-category">' + categoryReadable + '</span><span class="match-ratio-value">' + matchRatioHtmlValue + '</span></li>')
-				.appendTo('.match-ratios-list-hover')
-				.hover(function(e){
-					// return early if questions haven't finished loading
-					if (!_OKCP.getHoverAnswersFinished) return false;
+				.appendTo('.match-ratios-list-hover.'+name)
 
-					var target = e.target.tagName === 'LI' ? $(e.target) : $(e.target).parent('li');
-					var category = target.attr('category');
-
-					$('.question-detail > ul:not(.question-detail-' + category + ')').stop().slideUp(500);
-
-				}, function() {
-					$('.question-detail > ul').slideDown(500);
-				});
-
-
-			for (var i = 0; i < questionList.length; i++) {
-				var question = questionList[i];
-				if (question.category === category) {
-					if ($('.question-detail-'+question.category).length === 0) {
-						$('.question-detail').append('<ul class="question-detail-'+question.category+'"></ul>');
-					}
-					matchClass = 'match-' + (Math.floor((question.answerScore+1)/2*5));
-					$('.question-detail-'+question.category).append('<li class="match ' + matchClass + '"><ul>'+
-						'<li class="question qid-'+question.qid+'">' + question.question + '</li>'+
-						'<li class="answer">' + question.theirAnswer + '</li>'+
-						'<li class="explanation">' + question.theirNote + '</li>'+
-						'</ul></li>');
-					if ($('.question-detail-'+question.category+' .match').length === 1) {
-						$('.question-detail-'+question.category).prepend('<li class="category-header category-header-'+question.category+'">'+question.categoryReadable+'</li>');
-					}
-				}
-			}
 		}
 
-
-		if ($('.question-detail > ul').length === 0) {
-			$('.question-detail').append('<ul><li class="match match-nomatches"><ul>'+
-				'<li class="noresults">' + 'No Results' + '</li>'+
-				'<li class="note">' + 'To improve the plugin\'s accuracy, answer more questions publicly and rank them as "Very Important". You can also click the "Improve Accuracy" link at the top of this panel to help out.' + '</li>'+
-				'</ul></li></ul>');
-			return false;
-		}
 
 		// sort categories
-		$('.match-ratios-list-hover .match-ratio').sort(function(a,b) {
+		$('.match-ratios-list-hover.'+name+' .match-ratio').sort(function(a,b) {
 			if ($(b).find('.match-ratio-category').text() === "poly:") return true;
 			if ($(a).find('.match-ratio-category').text() === "poly:") return false;
 			return ( $(a).find('.match-ratio-category').text() > $(b).find('.match-ratio-category').text() );
-		}).appendTo('.match-ratios-list-hover');
-
-		$('.question-detail > ul').sort(function(a,b) {
-			if ($(b).find('.category-header').text() === "poly") return true;
-			if ($(a).find('.category-header').text() === "poly") return false;
-			return ( $(a).find('.category-header').text() > $(b).find('.category-header').text() );
-		}).appendTo('.question-detail');
+		}).appendTo('.match-ratios-list-hover.'+name);
 
 		if (_OKCP.debugTimerEnabled) {
 			console.log('Fetching the questions took ' + (new Date().getTime() - _OKCP.debugTimer.getTime()) + ' ms');
