@@ -1,11 +1,11 @@
-_OKCP.getHoverAnswers = function (list, $card) {
+_OKCP.getHoverAnswers = function ($card, list) {
 	var name = $($card).find('[href]')[0].href.split('profile/')[1].split('?')[0]
 ;
-	console.log({list, $card, name});
-	list = undefined;
+	// $('.match-ratios-wrapper-outer-hover.'+name) && $('.match-ratios-wrapper-outer-hover.'+name).remove();
 	$('.match-ratios-wrapper-outer-hover') && $('.match-ratios-wrapper-outer-hover').remove();
 	
 	var ratioList = $('<table class="match-ratios-wrapper-outer-hover"><tr><td class="match-ratios">'+
+	// var ratioList = $('<table class="match-ratios-wrapper-outer-hover '+name+'"><tr><td class="match-ratios">'+
 		'<ul class="match-ratios-list-hover"></ul>'+
 		'</td></tr></table>');
 	

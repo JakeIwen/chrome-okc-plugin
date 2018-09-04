@@ -1087,24 +1087,29 @@ body#p_profile .tabbed_heading #actions .action_options .flatbutton {
   font-size: 0.9em;
 }
 
-#page-results:target {
+#page-results:target , .page-results:target {
   display: block;
   padding-top: 10px;
   border-top: solid 3px #CCC;
   margin-top: 10px;
 }
 
-#page-results {
+#page-results, .page-results {
   display: none;
   background: white;
   text-align: center;
 }
 
 #page-results .btn,
+.page-results .btn, 
 #page-results .talk_btn,
+.page-results .talk_btn, 
 #page-results .edit_note,
+.page-results .edit_note, 
 #page-results .answer_area,
+.page-results .answer_area, 
 #page-results .pages,
+.page-results .pages, 
 #page-results .oknotice {
   display: none;
 }

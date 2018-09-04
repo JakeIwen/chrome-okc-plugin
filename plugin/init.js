@@ -31,10 +31,7 @@ $(function(){
 	}
 	
 	if (onBrowseMatches) {
-		console.log('MATCHES');
-		console.log(_OKCP);
 		_OKCP.browseMatches();
-		
 	}
 
 	// initialize large thumbnail viewer
