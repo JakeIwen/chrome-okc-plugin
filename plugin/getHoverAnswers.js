@@ -30,12 +30,12 @@ _OKCP.getHoverAnswers = function ($card, list, dealBreakers, removeMismatches) {
 	
 	window.aUrls = window.aUrls || [];
 	var url = '';
-	var numQuestionPages = _OKCP.numQuestionPages;
-	var numQuestionPages = 1;
 	var numRequestsMade = 0;
 	var numRequestsFinished = 0;
 	var questionList = [];
-	var lastSuccess = true;
+	var initialMaxRequests = 20;
+	var numQuestionPages = initialMaxRequests;
+	var failed = 0;
 	var responseCount = {};
 	var responseGood = 0;
 	var response = 0;
@@ -52,7 +52,7 @@ _OKCP.getHoverAnswers = function ($card, list, dealBreakers, removeMismatches) {
 			: {};
 	}
 
-	nextRequest();
+	firstRequests();
 
 	function loadData(response, status, xhr) {
 		numRequestsFinished++;
@@ -66,7 +66,6 @@ _OKCP.getHoverAnswers = function ($card, list, dealBreakers, removeMismatches) {
 			// console.log('xhr', xhr);
 			// console.log('questionPath', questionPath);
 			console.log($(this).html().length, numRequestsFinished, url);
-			debugger;
 		// }
 		//fix the illegal ids that break jQuery
 		$(this).find('[id]').each(function(){
@@ -135,43 +134,58 @@ _OKCP.getHoverAnswers = function ($card, list, dealBreakers, removeMismatches) {
 			}
 		}
 		
-		lastSuccess = $(response).html().length > 1000 ;
-		if (numRequestsFinished == numRequestsMade) {
-			
-			if (lastSuccess ) {
-				if (numQuestionPages > 100) {
-					debugger;
-				}
-				numQuestionPages++;
-				console.log('increasing num pages to ', numQuestionPages);
-				nextRequest();
-			} else {
-				stopLoading = true;
-				console.log('url', url);
-				console.log('numQuestionPages', numQuestionPages);
-				saveAnswers();
-			}
-		
+		lastSuccess = $(this).html().length > 1000 ;
+		if (!lastSuccess) {
+			failed++;
 		}
-		areWeDone();
+		if (numRequestsFinished >= initialMaxRequests) {
+			if (numRequestsFinished >= numQuestionPages){
+				console.log('failed', failed);
+				console.log('numQuestionPages', numQuestionPages);
+				areWeDone();
+				saveAnswers();
+			} else if(numRequestsFinished >= numRequestsMade){
+				nextRequest();
+			} else{
+				debugger;
+			}
+		}
 		
 	}
 	
-	function nextRequest(){
-		if (numRequestsMade < numQuestionPages) {
-			if (!$('.page-results'+name).length) {
-				pageResultsDiv = $('<div class="page-results '+name+'"></div>').appendTo($card);
+	function firstRequests(){
+		pageResultsDiv = $('<div class="page-results '+name+'"></div>').appendTo($card);
+		
+		$.get(`https://www.okcupid.com/profile/${name}/questions`, data => {
+			numQuestionPages = $(data).find('a.last').text() || 20;
+			if (!$(data).find('a.last').text()) {
+				console.log('couldnt find pagenum');
+				debugger;
 			}
-			url = "//www.okcupid.com/profile/" + name + "/questions?n=2&low=" + (questionPageNum*10+1) + "&i_care=1&leanmode=1";
-			questionPageNum++;
-			
-			if (!requestFailed) {
-				numRequestsMade++;
-				console.log('reqs made', numRequestsMade);
+			console.log(`name: ${name}, numpages: ${numQuestionPages}`);
+			// nextRequest();
+			for (var i = 0; i < Math.min(initialMaxRequests, numQuestionPages); i++) {
+				url = "//www.okcupid.com/profile/" + name + "/questions?n=2&low=" + (questionPageNum*10+1) + "&leanmode=1";
+				questionPageNum++;
 				$('<div class="page-results-' + questionPageNum + ' page-results-' + name + '"></div>')
-					.appendTo('.page-results.'+name)
+					.appendTo(pageResultsDiv)
 					.load(url, loadData);
 			}
+		})
+		
+
+	}
+	
+	function nextRequest(){
+		url = "//www.okcupid.com/profile/" + name + "/questions?n=2&low=" + (questionPageNum*10+1) + "&leanmode=1";
+		questionPageNum++;
+		
+		if (!requestFailed) {
+			numRequestsMade++;
+			console.log('reqs made', numRequestsMade);
+			$('<div class="page-results-' + questionPageNum + ' page-results-' + name + '"></div>')
+				.appendTo(pageResultsDiv)
+				.load(url, loadData);
 		}
 	
 
