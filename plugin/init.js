@@ -5,7 +5,7 @@ $(function(){
 	var onPageMailbox = $('#p_mailbox').length > 0;
 	var onPageProfile = $('#p_profile').length > 0;
 	var onBrowseMatches = window.location.pathname=='/match';
-	var onLikes = window.location.pathname=='/who-you-like';
+	window.onLikes = window.location.pathname=='/who-you-like';
 	window.answers = localStorage.answers || "{}";
 	window.numAnswers = 0;
 	window.inProgress = {};
@@ -38,7 +38,7 @@ $(function(){
 	if (onBrowseMatches) {
 		_OKCP.browseMatches();
 	}
-	if (onLikes) {
+	if (window.onLikes) {
 		console.log('lieks');
 		_OKCP.likes();
 	}

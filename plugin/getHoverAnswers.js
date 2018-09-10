@@ -1,32 +1,38 @@
 _OKCP.getHoverAnswers = function ($card, list, dealBreakers, removeMismatches) {
-	console.log({list});
+	list = undefined;
 	const chosenCategories = Object.keys(list || {});
 	var name = $($card).find('[href]')[0].href.split('profile/')[1].split('?')[0];
 
-	if ((window.inProgress || {})['a'+name]) return;
+	// if ((window.inProgress || {})['a'+name]) return;
+	if ($('.match-ratios-wrapper-outer-hover.'+name).length) {
+		console.log('exists');
+		return;
 	
+	}
 	// dealBreakers = ["oral_sex"];
 	window.inProgress['a'+name] = true;
 	console.log('checking for ', name);
-	
+	$('.match-ratios-wrapper-outer-hover').remove();
 	var answers = JSON.parse(window.answers)
 	
-	var hasRatioList = $('.match-ratios-wrapper-outer-hover.'+name).length > 0;
+	// var hasRatioList = $('.match-ratios-wrapper-outer-hover.'+name).length > 0;
 	
-	var ratioList = $('<table class="match-ratios-wrapper-outer-hover hover  '+name+'"><tr><td class="match-ratios">'+
-		'<ul class="match-ratios-list-hover '+name+'"></ul>'+
-		'</td></tr></table>');
+	var ratioList = $(`<table class="match-ratios-wrapper-outer-hover hover ${window.onLikes ? 'likes-view' : ''} ${name}"><tr><td class="match-ratios">
+		<ul class="match-ratios-list-hover ${name}"></ul>
+		</td></tr></table>`);
 		
 	if (answers['a' + name] && answers['a' + name].includes(name)) {
 		ratioList = $(answers['a' + name]);
-		!hasRatioList && $($card).prepend(ratioList);
+		// !hasRatioList && 
+		$($card).prepend(ratioList);
 		purgeMismatches(answers['a' + name]);
 		removeDupes();
 		window.inProgress['a'+name] = false;
 		return;
 	}
 	console.log('making new');
-	!hasRatioList && $($card).prepend(ratioList);
+	// !hasRatioList && 
+	$($card).prepend(ratioList);
 	
 	window.aUrls = window.aUrls || [];
 	var url = '';
@@ -39,6 +45,7 @@ _OKCP.getHoverAnswers = function ($card, list, dealBreakers, removeMismatches) {
 	var responseCount = {};
 	var responseGood = 0;
 	var response = 0;
+	var finished = false;
 	var questionPageNum = 0; //for iterating over question pages
 	var questionPath; //for storing the path of the question page as we iterate
 	var requestFailed = false;
@@ -135,20 +142,20 @@ _OKCP.getHoverAnswers = function ($card, list, dealBreakers, removeMismatches) {
 		}
 		
 		lastSuccess = $(this).html().length > 1000 ;
-		if (!lastSuccess) {
-			failed++;
-		}
-		if (numRequestsFinished >= initialMaxRequests) {
+		if (!lastSuccess) failed++;
+		if (numRequestsMade > 200) debugger;
+		if (!finished && numRequestsFinished >= Math.min(initialMaxRequests, numQuestionPages)) {
 			if (numRequestsFinished >= numQuestionPages){
+
 				console.log('failed', failed);
 				console.log('numQuestionPages', numQuestionPages);
+				finished = true;
 				areWeDone();
 				saveAnswers();
+
 			} else if(numRequestsFinished >= numRequestsMade){
 				nextRequest();
-			} else{
-				debugger;
-			}
+			} 
 		}
 		
 	}
@@ -157,13 +164,8 @@ _OKCP.getHoverAnswers = function ($card, list, dealBreakers, removeMismatches) {
 		pageResultsDiv = $('<div class="page-results '+name+'"></div>').appendTo($card);
 		
 		$.get(`https://www.okcupid.com/profile/${name}/questions`, data => {
-			numQuestionPages = $(data).find('a.last').text() || 20;
-			if (!$(data).find('a.last').text()) {
-				console.log('couldnt find pagenum');
-				debugger;
-			}
+			numQuestionPages = parseInt($(data).find('a.last').text()) || 20;
 			console.log(`name: ${name}, numpages: ${numQuestionPages}`);
-			// nextRequest();
 			for (var i = 0; i < Math.min(initialMaxRequests, numQuestionPages); i++) {
 				url = "//www.okcupid.com/profile/" + name + "/questions?n=2&low=" + (questionPageNum*10+1) + "&leanmode=1";
 				questionPageNum++;
@@ -173,20 +175,23 @@ _OKCP.getHoverAnswers = function ($card, list, dealBreakers, removeMismatches) {
 			}
 		})
 		
-
 	}
 	
 	function nextRequest(){
-		url = "//www.okcupid.com/profile/" + name + "/questions?n=2&low=" + (questionPageNum*10+1) + "&leanmode=1";
-		questionPageNum++;
-		
-		if (!requestFailed) {
-			numRequestsMade++;
-			console.log('reqs made', numRequestsMade);
-			$('<div class="page-results-' + questionPageNum + ' page-results-' + name + '"></div>')
-				.appendTo(pageResultsDiv)
-				.load(url, loadData);
+		for (var i = 0; i < 10; i++) {
+			url = "//www.okcupid.com/profile/" + name + "/questions?n=2&low=" + (questionPageNum*10+1) + "&leanmode=1";
+			questionPageNum++;
+			
+			if (!requestFailed) {
+				numRequestsMade++;
+				console.log('reqs made', numRequestsMade);
+				$('<div class="page-results-' + questionPageNum + ' page-results-' + name + '"></div>')
+					.appendTo(pageResultsDiv)
+					.load(url, loadData);
+			}
+
 		}
+		
 	
 
 	}
@@ -195,7 +200,6 @@ _OKCP.getHoverAnswers = function ($card, list, dealBreakers, removeMismatches) {
 	function areWeDone() {
 
 		$('.match-ratios-list-hover.'+name).html('');
-		
 		for (var category in responseCount) {
 			
 			var countArr = responseCount[category];
@@ -238,7 +242,8 @@ _OKCP.getHoverAnswers = function ($card, list, dealBreakers, removeMismatches) {
 	}
 	
 	function purgeMismatches(html){
-		const hasElement = new RegExp(chosenCategories.join("|")).test(html);
+		const hasElement = new RegExp(['anal'].join("|")).test(html);
+		// const hasElement = new RegExp(chosenCategories.join("|")).test(html);
 		if (removeMismatches && !hasElement) {
 			console.log('purge noMatch:', name);
 			for (var i = 0; i < chosenCategories.length; i++) {

@@ -78,12 +78,17 @@
   overflow-y: scroll;
   width: 225px;
   z-index: 5;
+  border-radius: 10px;
+}
+.match-ratios-wrapper-outer-hover.hover.likes-view{
+  right: -225px;
+  max-height: 500px;;
 }
 .match-ratios-wrapper-outer-hover.hover{
   max-height: 225px;
 }
 .match-ratios-wrapper-outer-hover.hover * {
-  visibility: hidden;
+  /* visibility: hidden; */
 }
 .match-ratios-wrapper-outer-hover.hover:hover * {
   visibility: visible;
@@ -144,6 +149,11 @@
   width: 0%;
   border-radius: 15px;
   opacity: 1;
+}
+
+#okcp .likes-view .match-ratio .match-ratio-progressbar {
+  right: inherit;
+  left: 0;
 }
 
 #okcp .match-ratio .match-ratio-value {
