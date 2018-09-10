@@ -528,7 +528,7 @@ _OKCP.fileQuestions.relationship_model =
                 "qid":"1440",
                 "text":"Jealousy: healthy or unhealthy, in the context of a relationship?",
                 "answerText": ["Healthy", "Unhealthy"],
-                "score": [-1, 1],
+                "score": [1, -1],
                 "weight": [0.5, 0.5]
             },
             {

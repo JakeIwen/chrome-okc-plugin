@@ -71,12 +71,22 @@
   z-index: 0;
 }
 
+
 .match-ratios-wrapper-outer-hover {
   position: absolute;
   max-height: 350px;
   overflow-y: scroll;
   width: 225px;
   z-index: 5;
+}
+.match-ratios-wrapper-outer-hover.hover{
+  max-height: 225px;
+}
+.match-ratios-wrapper-outer-hover.hover * {
+  visibility: hidden;
+}
+.match-ratios-wrapper-outer-hover.hover:hover * {
+  visibility: visible;
 }
 
 #okcp .match-ratios-list {

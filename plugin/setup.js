@@ -13,7 +13,7 @@ _OKCP.fileQuestions = {};
 
 _OKCP.questionFetchingMethod = "mobile_app"; //alt value is "original", but that code is almost certainly broken. (currently it's commented out)
 _OKCP.largeThumbSize = '250';
-_OKCP.numQuestionPages = 30;		//how many pages to search through to match question answers (10 questions per page, sorted by 'i_care' so mandatory and very important answers will show up first - later questions after this limit will NOT be searched/matched at all!! So make sure to make this number big enough and that users mark their questions as very important to ensure they get matched! Note: bigger numbers mean slower loading of results.)
+_OKCP.numQuestionPages = 55;		//how many pages to search through to match question answers (10 questions per page, sorted by 'i_care' so mandatory and very important answers will show up first - later questions after this limit will NOT be searched/matched at all!! So make sure to make this number big enough and that users mark their questions as very important to ensure they get matched! Note: bigger numbers mean slower loading of results.)
 
 _OKCP.cacheEnabled = true;
 _OKCP.debugTimerEnabled = false; //for timing how long question requests take

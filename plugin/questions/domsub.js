@@ -270,9 +270,9 @@ _OKCP.fileQuestions.domsub =
 			{
 				"qid":"29",
 				"text":"Would you rather...",
-				"answerText": ["be tied up during sex", "do the tying", "avoid bondage all together"],
-				"score": [-1, 1, 0],
-				"weight": [1, 1, 1]
+				"answerText": ["be tied up during sex", "do the tying", "avoid bondage all together", "sometimes be tied up, sometimes do the tying"],
+				"score": [-1, 1, 0, 1],
+				"weight": [1, 1, 1, 0.5]
 			},
 			{
 				"qid":"463",
@@ -582,9 +582,9 @@ _OKCP.fileQuestions.domsub =
 			{
 				"qid":"29",
 				"text":"Would you rather...",
-				"answerText": ["be tied up during sex", "do the tying", "avoid bondage all together"],
-				"score": [1, -1, 0],
-				"weight": [1, 1, 1]
+				"answerText": ["be tied up during sex", "do the tying", "avoid bondage all together", "sometimes be tied up, sometimes do the tying"],
+				"score": [1, -1, 0, 1],
+				"weight": [1, 1, 1, 0.5]
 			},
 			{
 				"qid": "60756",

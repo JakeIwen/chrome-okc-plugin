@@ -121,6 +121,7 @@ window.OkC = {
 			ACCESS_TOKEN !== null &&
 			ACCESS_TOKEN !== ""
 		) {
+			console.log("setting token");
 			baseHeaders["Authorization"] = `Bearer ${ACCESS_TOKEN}`;
 		}
 
@@ -133,7 +134,7 @@ window.OkC = {
 
 		let ajaxParams = _.extend({}, params);
 		ajaxParams.headers = _.extend(baseHeaders, params.headers);
-
+		console.log({ajaxParams});
 		// JSON data handling
 		// ----------------------------------------------------------------------
 

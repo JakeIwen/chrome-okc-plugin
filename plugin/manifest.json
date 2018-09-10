@@ -71,6 +71,7 @@
         "features/reviewProfiles.js",
         "features/messageSearch.js",
         "features/browseMatches.js",
+        "features/likes.js",
         "getAnswers.js",
         "getBrowseAnswers.js",
         "getHoverAnswers.js",

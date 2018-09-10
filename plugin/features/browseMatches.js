@@ -1,55 +1,31 @@
 _OKCP.browseMatches = function() {
-  let numBtns = $("button[name='like']").length;
   
-  verifyTokenPresence();
   setPasses();
   setInterval(()=>{
-    const newNum = $("button[name='like']").length
-    if (numBtns < newNum) setPasses();
-    numBtns = newNum;
+    const likeNum = $("button[name='like']").length
+    const passNum = $("button[name='pass']").length
+    if (likeNum > passNum) setPasses();
   }, 1000);
-  
-  setTimeout(()=>console.log('reg window', window), 3000);
-  
-  // setInterval(()=>{
-  //   $('.match_card_wrapper').each(function(){
-  //     if(!$(this).find('.match-ratio-category').text().includes('anal')){
-  //       this.css({display: 'none'});
-  //       console.log('hiding card');
-  //     } else {
-  //       console.log('showing card');
-  //       this.css({display: none});
-  // 
-  //     }
-  //   })
-  //   let $card = $('.match_card_wrapper');
-  // }, 5000)
 
-  function verifyTokenPresence() {
-    window.CURRENTUSERID = "49246541853129158";
-    const settings = localStorage.okcpSettings;
-    const tokenIsOld = (Date.now()-(localStorage.okcpTokenLastUpdated || 0)) > 60*60*2.75*1000;
-    window.ACCESS_TOKEN = settings.ACCESS_TOKEN;
-    if(tokenIsOld || !window.ACCESS_TOKEN) {
-      console.log('getting new token');
-      window.OkC.getNewAccessToken().then(tokenres => {
-        settings.ACCESS_TOKEN = tokenres.authcode;
-        localStorage.okcpTokenLastUpdated = Date.now();
-      });
-    }
-  }
   
   function setLike($card, $btn, val){
     const userId = $btn.closest("div[data-userid]").attr("data-userid");
     const params = getLikePassParams(userId, val);
     const path = "/likes/batch";
     window.OkC.api(path, params).then(res => {
-      $($card).css({display: 'none'});
+      if (res.results[0].mutual_like) {
+        $($card).css({backgroundColor: 'green'})
+        console.log('MUTUAL LIKE');
+        setTimeout(()=>$($card).css({display: 'none'}), 2200)
+      } else {
+        $($card).css({display: 'none'})
+      }
+      
     }).catch(err => console.log(err));
   }
   
   function setPasses() {
-    $("button[name='like']").each(function() {
+    $("button[name='like']").each(function(i) {
       if((this.nextSibling || {}).name == "pass") return;
       const $card = this.closest('.match_card_wrapper');
       let $likeBtn = $(this).clone();
@@ -63,15 +39,13 @@ _OKCP.browseMatches = function() {
       let $btnRow = $('<div></div>');
       $btnRow.append([$likeBtn, $passBtn]);
       $(this).replaceWith($btnRow);
-      browseAnswers($card);
+      browseAnswers($card, i);
     })
   }
   
-  function browseAnswers($card) {
+  function browseAnswers($card, i) {
     const questions = JSON.parse(localStorage.okcpDefaultQuestions).questionsList;
-    $($card).hover(()=>
-      _OKCP.getHoverAnswers($card)
-    )
+    $($card).hover(()=>_OKCP.getHoverAnswers($card, undefined, undefined))
   }
   
   function getLikePassParams(userId, likeBool) {
