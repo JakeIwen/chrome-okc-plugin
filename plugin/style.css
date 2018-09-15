@@ -72,8 +72,14 @@
 }
 
 .userrow.is-liked-you{
-  height:160px;
+  height:175px;
   width: 620px;
+}
+
+.category-filters{
+  position: absolute; 
+  top: 20px;
+  right: -20px;
 }
 
 .mock-link{
@@ -83,6 +89,17 @@
   left: 5px;
   right: 5px;
 }
+.show-all{
+  right: 250px; 
+  position: absolute; 
+  top: 15px; 
+}
+.hide-weak{
+  right: 250px; 
+  position: absolute; 
+  top: 45px; 
+}
+
 .pass-btn{
   right: 5px; 
   position: absolute; 

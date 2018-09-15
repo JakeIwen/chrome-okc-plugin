@@ -1,5 +1,10 @@
 _OKCP.browseMatches = function() {
   
+  function browseAnswers($card, i) {
+    const questions = JSON.parse(localStorage.okcpDefaultQuestions).questionsList;
+    $($card).find('img').hover(()=>_OKCP.getHoverAnswers($card, undefined, undefined))
+  }
+  
   setPasses();
   setInterval(()=>{
     const likeNum = $("button[name='like']").length
@@ -42,11 +47,6 @@ _OKCP.browseMatches = function() {
       $(this).replaceWith($btnRow);
       browseAnswers($card, i);
     })
-  }
-  
-  function browseAnswers($card, i) {
-    const questions = JSON.parse(localStorage.okcpDefaultQuestions).questionsList;
-    $($card).find('img').hover(()=>_OKCP.getHoverAnswers($card, undefined, undefined))
   }
   
   function getLikePassParams(userId, likeBool) {

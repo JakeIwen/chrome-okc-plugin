@@ -1,39 +1,34 @@
-_OKCP.getHoverAnswers = function ($card, list, dealBreakers, removeMismatches) {
-	list = undefined;
-	const chosenCategories = Object.keys(list || {});
+_OKCP.getHoverAnswers = function ($card, requiredCategories, filterList) {
+	list = localStorage.okcpDefaultQuestions 
+		? JSON.parse(localStorage.okcpDefaultQuestions).questionsList 
+		: {};
+		
 	var name = ($($card).attr('href'))
 		? $($card).attr('href').split('profile/')[1].split('?')[0]
 		: $($card).find('[href]')[0].href.split('profile/')[1].split('?')[0];
 		
-	console.log('name', name);
 	name = 'usr' + name;
-	// if ((window.inProgress || {})[name]) return;
+	
 	if ($('.match-ratios-wrapper-outer-hover.'+name).length) {
-		console.log('exists');
 		return;
 	}
-	// dealBreakers = ["oral_sex"];
-	window.inProgress[name] = true;
+	
+	
 	console.log('checking for ', name);
 	var answers = JSON.parse(window.answers)
-	// var hasRatioList = $('.match-ratios-wrapper-outer-hover.'+name).length > 0;
 	
 	var ratioList = $(`<table class="match-ratios-wrapper-outer-hover hover ${window.onLikes ? 'likes-view' : ''} ${name}"><tr><td class="match-ratios">
 		<ul class="match-ratios-list-hover ${name}"></ul>
 		</td></tr></table>`);
 		
 	if (answers[name] && answers[name].includes(name)) {
-		ratioList = answers[name];
-		// !hasRatioList && 
-		$($card).prepend(ratioList);
-		// $($card).append('<div style="height: 250px"></div>') 
+		$($card).prepend(answers[name]);
 		purgeMismatches(answers[name]);
 		removeDupes();
-		window.inProgress[name] = false;
 		return;
 	}
+	
 	console.log('making new');
-	// !hasRatioList && 
 	$($card).prepend(ratioList);
 	
 	window.aUrls = window.aUrls || [];
@@ -55,29 +50,19 @@ _OKCP.getHoverAnswers = function ($card, list, dealBreakers, removeMismatches) {
 	var recentProfiles = localStorage.okcpRecentProfiles ? JSON.parse(localStorage.okcpRecentProfiles) : {"_ATTENTION":"This is just temporary caching to avoid hitting the server a million times. Notice there's an expires time built in for each key."};
 	
 	// get list of questions and categories to compare to
-	if (list === undefined) {
-		list = localStorage.okcpDefaultQuestions 
-			? JSON.parse(localStorage.okcpDefaultQuestions).questionsList 
-			: {};
-	}
 
 	firstRequests();
 
 	function loadData(response, status, xhr) {
 		numRequestsFinished++;
 		if (finished)  return false;
-			
 		
 		if ( status === "error" ) {
 			console.log("Request failed on number " + numRequestsMade);
 			requestFailed = true;
 			return false;
 		}
-		// if ($(this).html().length==373 || questionPageNum == 11) {
-			// console.log('xhr', xhr);
-			// console.log('questionPath', questionPath);
-			console.log($(this).html().length, numRequestsFinished, url);
-		// }
+
 		//fix the illegal ids that break jQuery
 		$(this).find('[id]').each(function(){
 			var elem = $(this);
@@ -98,7 +83,6 @@ _OKCP.getHoverAnswers = function ($card, list, dealBreakers, removeMismatches) {
 				var questionElem = $(pageResultsDiv).find('#question_' + num);
 				// if question isn't present on page, continue
 				if (questionElem.length === 0) continue;
-				// else if ($(this).html().includes("anal")) debugger;
 				// get question information
 				var questionText = questionElem.find('.qtext').text().trim();
 				if (questionText === "") continue;
@@ -114,14 +98,11 @@ _OKCP.getHoverAnswers = function ($card, list, dealBreakers, removeMismatches) {
 						theirAnswerIndex = j;
 						break;
 					}
-					// if (!theirAnswerIndex && (j===possibleAnswers.length-1) && !theirAnswer.includes("Answer publicly")) debugger;
 				}
 				answerScore = listItem.score[theirAnswerIndex];
 				answerWeight = listItem.weight ? listItem.weight[theirAnswerIndex] || 0 : 1;
 				if (answerWeight === 0) continue;
 				answerScoreWeighted = ((answerScore+1) / 2) * answerWeight;
-				// console.log(answerScore + " " + answerWeight);
-
 				//ensure there's an entry for the category count
 				if (!responseCount[category]) responseCount[category] = [0,0];
 
@@ -147,12 +128,12 @@ _OKCP.getHoverAnswers = function ($card, list, dealBreakers, removeMismatches) {
 		
 		lastSuccess = $(this).html().length > 1000 ;
 		if (!lastSuccess) failed++;
-		if (numRequestsMade > 200) debugger;
+		if (numRequestsMade > 300) debugger;
 		if (numRequestsFinished >= Math.min(initialMaxRequests, numQuestionPages)) {
 			if (numRequestsFinished >= numQuestionPages){
 			 
 				console.log('failed', failed);
-				console.log('numQuestionPages', numQuestionPages);
+				console.log('numQuestionPages', name, numQuestionPages);
 				finished = true;
 				areWeDone();
 				saveAnswers();
@@ -173,7 +154,6 @@ _OKCP.getHoverAnswers = function ($card, list, dealBreakers, removeMismatches) {
 			for (var i = 0; i < Math.min(initialMaxRequests, numQuestionPages); i++) {
 				url = "//www.okcupid.com/profile/" + name.replace('usr', '') + "/questions?n=2&low=" + (questionPageNum*10+1) + "&leanmode=1";
 				questionPageNum++;
-				console.log('url', url);
 				$('<div class="page-results-' + questionPageNum + ' page-results-' + name + '"></div>')
 					.appendTo(pageResultsDiv)
 					.load(url, loadData);
@@ -244,21 +224,20 @@ _OKCP.getHoverAnswers = function ($card, list, dealBreakers, removeMismatches) {
 		purgeMismatches(html);
 		
 		window.answers = JSON.stringify(answers).replace(/(\\n|\\t)*/g, '');
-		window.inProgress[name] = false;
 	}
 	
 	function purgeMismatches(html){
-		const hasElement = new RegExp(['anal'].join("|")).test(html);
-		// const hasElement = new RegExp(chosenCategories.join("|")).test(html);
-		if (removeMismatches && !hasElement) {
-			console.log('purge noMatch:', name);
-			for (var i = 0; i < chosenCategories.length; i++) {
-				if (html.includes(chosenCategories[i])) {
-					debugger;
-				}
-			}
+		$('.match-ratio-category').each(function(){
+			const domName = $(this).text()
+			const hasField = !requiredCategories.some(cat => spaces(domName).includes(spaces(cat)))
+			if (hasField) $(this).parent()	.remove();
+		})
+		if ( !requiredCategories.some(category => html.includes(category)) ) 
 			$($card).remove();
-		}
+	}
+	
+	function spaces(str){
+		return str.replace(/(\-|_)/g, ' ')
 	}
 	
 	function removeDupes(){
