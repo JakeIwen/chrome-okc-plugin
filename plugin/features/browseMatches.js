@@ -13,6 +13,7 @@ _OKCP.browseMatches = function() {
     const params = getLikePassParams(userId, val);
     const path = "/likes/batch";
     window.OkC.api(path, params).then(res => {
+      console.log('res', res);
       if (res.results[0].mutual_like) {
         $($card).css({backgroundColor: 'green'})
         console.log('MUTUAL LIKE');
@@ -45,7 +46,7 @@ _OKCP.browseMatches = function() {
   
   function browseAnswers($card, i) {
     const questions = JSON.parse(localStorage.okcpDefaultQuestions).questionsList;
-    $($card).hover(()=>_OKCP.getHoverAnswers($card, undefined, undefined))
+    $($card).find('img').hover(()=>_OKCP.getHoverAnswers($card, undefined, undefined))
   }
   
   function getLikePassParams(userId, likeBool) {

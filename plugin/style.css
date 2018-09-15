@@ -71,6 +71,37 @@
   z-index: 0;
 }
 
+.userrow.is-liked-you{
+  height:160px;
+  width: 620px;
+}
+
+.mock-link{
+  position: absolute; 
+  top: 5px;
+  bottom: 5px;
+  left: 5px;
+  right: 5px;
+}
+.pass-btn{
+  right: 5px; 
+  position: absolute; 
+  bottom: 5px; 
+  z-index: 10;
+}
+.reset-btn{
+  right: 5px; 
+  position: absolute; 
+  top: 5px; 
+  z-index: 10;
+}
+
+.reset-all-btn{
+  right: 5px; 
+  position: absolute; 
+  top: 5px; 
+  z-index: 10;
+}
 
 .match-ratios-wrapper-outer-hover {
   position: absolute;
@@ -81,7 +112,7 @@
   border-radius: 10px;
 }
 .match-ratios-wrapper-outer-hover.hover.likes-view{
-  right: -225px;
+  right: 125px;
   max-height: 500px;;
 }
 .match-ratios-wrapper-outer-hover.hover{
