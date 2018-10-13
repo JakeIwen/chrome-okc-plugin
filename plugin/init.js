@@ -200,9 +200,11 @@ window.Product = Product;
 	}
 	
 	if (onBrowseMatches) {
+		window.domLocations = [];
 		_OKCP.browseMatches();
 	}
 	if (window.onLikes) {
+		window.domLocations = [];
 		console.log('lieks');
 		_OKCP.likes();
 	}

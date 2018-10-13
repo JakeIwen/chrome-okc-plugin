@@ -3,24 +3,17 @@ _OKCP.getHoverAnswers = function ($card) {
 	const showAll = getShowAllBool()
 	const hideWeak = getHideWeakBool()
 	
-	list = localStorage.okcpDefaultQuestions 
+	var list = localStorage.okcpDefaultQuestions 
 		? JSON.parse(localStorage.okcpDefaultQuestions).questionsList 
 		: {};
-		
-	var name = 'usr' + $($card).find('[data-username]').attr('data-username');
 
-	// var name = ($($card).attr('href'))
-	// 	? $($card).attr('href').split('profile/')[1].split('?')[0]
-	// 	: $($card).find('[href]')[0].href.split('profile/')[1].split('?')[0];
-	// 
+	if (name) debugger;
+	var name = 'usr' + $($card).find('[data-username]').attr('data-username');
 	
 	if ($('.match-ratios-wrapper-outer-hover.'+name).length) {
 		return;
 	}
-	
-	
-	// console.log('checking for ' + name.replace('\n', ''));
-	// console.log(requiredCategories);
+
 	var answers = JSON.parse(window.answers)
 	var ratioList = $(`<table class="match-ratios-wrapper-outer-hover hover ${window.onLikes ? 'likes-view' : ''} ${name}"><tr><td class="match-ratios">
 		<ul class="match-ratios-list-hover ${name}"></ul>
@@ -29,8 +22,7 @@ _OKCP.getHoverAnswers = function ($card) {
 	if (answers[name] && answers[name].includes(name)) {
 		$($card).prepend(answers[name]);
 		removeDupes();
-		let cats = $($card).find(`.match-ratio-category`);
-		!showAll && hideCats(cats);
+		!showAll && hideCats($card);
 		purgeMismatches($card);
 		return;
 	}
@@ -38,7 +30,7 @@ _OKCP.getHoverAnswers = function ($card) {
 	console.log('making new');
 	$($card).prepend(ratioList);
 	
-	window.aUrls = window.aUrls || [];
+	window.aUrls = window.aUrls || []; //prevents multiple requests
 	var url = '';
 	var numRequestsMade = 0;
 	var numRequestsFinished = 0;
@@ -54,30 +46,59 @@ _OKCP.getHoverAnswers = function ($card) {
 	var questionPath; //for storing the path of the question page as we iterate
 	var requestFailed = false;
 	var pageResultsDiv
-	var recentProfiles = localStorage.okcpRecentProfiles ? JSON.parse(localStorage.okcpRecentProfiles) : {"_ATTENTION":"This is just temporary caching to avoid hitting the server a million times. Notice there's an expires time built in for each key."};
+	var recentProfiles = localStorage.okcpRecentProfiles 
+		? JSON.parse(localStorage.okcpRecentProfiles) 
+		: {"_ATTENTION":"This is just temporary caching to avoid hitting the server a million times. Notice there's an expires time built in for each key."};
 	
+	let usedQUestions = [];
 	// get list of questions and categories to compare to
 
 	firstRequests();
 
-	function loadData(response, status, xhr) {
+	function loadData(response, status, xhr, pageResultsDiv) {
 		numRequestsFinished++;
-		if (finished)  return false;
 		
 		if ( status === "error" ) {
 			console.log("Request failed on number " + numRequestsMade);
 			requestFailed = true;
+			debugger;
 			return false;
 		}
-
+		
+		var lastSuccess = response.length > 1000 ;
+		if (!lastSuccess) {
+			failed++;
+			console.log({xhr});
+			debugger;
+		}
+		if (!finished && (numRequestsFinished >= Math.min(initialMaxRequests, numQuestionPages))) {
+			if (numRequestsFinished >= numQuestionPages){
+				console.log('numQuestionPages', name, numQuestionPages);
+				finished = true;
+				parseCombinedPages(pageResultsDiv);
+				areWeDone();
+				saveAnswers();
+				!showAll && hideCats($card);
+			} else if(numRequestsFinished >= numRequestsMade){
+				nextRequest();
+			} 
+		}
+		
+	}
+	
+	function parseCombinedPages(pageResultsDiv){
 		//fix the illegal ids that break jQuery
-		$(this).find('[id]').each(function(){
+		
+		$(pageResultsDiv).find('[id]').each(function(){
 			var elem = $(this);
 			var oldID = elem.attr('id');
 			var idArr = oldID.split('\\\"');
-			if (idArr.length > 2) $(this).attr('id',idArr[1]);
+			if (idArr.length > 2) {
+				debugger;;
+				$(this).attr('id',idArr[1]);
+			};
 		});
-
+		
 		for (var category in list) {
 			var categoryQuestionList = list[category];
 			for (var i = 0; i < categoryQuestionList.length; i++) {
@@ -87,8 +108,9 @@ _OKCP.getHoverAnswers = function ($card) {
 				var num = listItem.qid;
 				var possibleAnswers = listItem.answerText;
 				// var questionElem = $('#question_' + num + '[public]');		//misses some
-				var questionElem = $(pageResultsDiv).find('#question_' + num);
+				var questionElem = $(pageResultsDiv).find('#question_' + num).not('.not_answered');
 				// if question isn't present on page, continue
+				// if (questionElem.length === 2) debugger; //multiple users q's being scanned
 				if (questionElem.length === 0) continue;
 				// get question information
 				var questionText = questionElem.find('.qtext').text().trim();
@@ -115,6 +137,12 @@ _OKCP.getHoverAnswers = function ($card) {
 
 				responseCount[category][0] += answerScoreWeighted;
 				responseCount[category][1] += answerWeight;
+				
+				// if (questionList.map(q=>q.qid).includes(num)) {
+				// 	console.log('skipped doublwe quetion');
+				// 	continue;
+				// };
+				
 				// console.log(num + " - " + questionText);
 				questionList.push({
 					question: questionText,
@@ -127,39 +155,21 @@ _OKCP.getHoverAnswers = function ($card) {
 					answerWeight: answerWeight,
 					answerScoreWeighted: answerScoreWeighted,
 					category: category,
+					name: name,
 					categoryReadable: category.split('_').join(' ')
 				});
 				
 				listItem.qid = listItem.qid+"-used";
 			}
 		}
-		var lastSuccess = $(this).html().length > 1000 ;
-		if (!lastSuccess) {
-			failed++;
-			console.log({xhr});
-			debugger;
-		}
-		if (numRequestsMade > 300) debugger;
-		if (numRequestsFinished >= Math.min(initialMaxRequests, numQuestionPages)) {
-			if (numRequestsFinished >= numQuestionPages){
-			 
-				console.log('failed', failed);
-				console.log('numQuestionPages', name, numQuestionPages);
-				finished = true;
-				areWeDone();
-				saveAnswers();
-				let cats = $($card).find(`.match-ratio-category`);
-				!showAll && hideCats(cats);
-			} else if(numRequestsFinished >= numRequestsMade){
-				nextRequest();
-			} 
-		}
+		debugger;
 		
 	}
 	
 	function firstRequests(){
+		console.log('name for pageresultsdiv', name);
 		pageResultsDiv = $('<div class="page-results '+name+'"></div>')
-		// .appendTo($card);
+
 		$.get(`https://www.okcupid.com/profile/${name.replace('usr', '')}/questions`, data => {
 			numQuestionPages = parseInt($(data).find('a.last').text()) || 20;
 			console.log(`name: ${name}, numpages: ${numQuestionPages}`);
@@ -168,7 +178,7 @@ _OKCP.getHoverAnswers = function ($card) {
 				questionPageNum++;
 				$('<div class="page-results-' + questionPageNum + ' page-results-' + name + '"></div>')
 					.appendTo(pageResultsDiv)
-					.load(url, loadData);
+					.load(url, (response, status, xhr)=>loadData(response, status, xhr));
 			}
 		})
 	}
@@ -180,21 +190,12 @@ _OKCP.getHoverAnswers = function ($card) {
 			if (!requestFailed) {
 				numRequestsMade++;
 				!(numRequestsMade % 10) && console.log('reqs made', numRequestsMade);
-				try{
-					$('<div class="page-results-' + questionPageNum + ' page-results-' + name + '"></div>')
-						.appendTo(pageResultsDiv)
-						.load(url, loadData);
-				}catch(err){
-					console.log('TRYING AGAIN', err);
-					debugger;
-					$('<div class="page-results-' + questionPageNum + ' page-results-' + name + '"></div>')
-						.appendTo(pageResultsDiv)
-						.load(url, loadData);
-				}
+				$('<div class="page-results-' + questionPageNum + ' page-results-' + name + '"></div>')
+					.appendTo(pageResultsDiv)
+					.load(url, (response, status, xhr)=>loadData(response, status, xhr, pageResultsDiv));
 			}
 		}
 	}
-
 
 	function areWeDone() {
 
@@ -205,7 +206,7 @@ _OKCP.getHoverAnswers = function ($card) {
 			var matchClass = 'match-' + Math.floor(countArr[0]/countArr[1]*5);
 			var categoryReadable = category.split('_').join(' ');
 			
-			if (countArr[1]<=1) matchClass += ' one-data-point-match';
+			if (countArr[1] <= 1)  matchClass += ' one-data-point-match';
 			if (countArr[1] >= 10) matchClass += ' more-than-10';
 			if (countArr[0]/countArr[1] <= 0.1) matchClass += ' not-a-match';
 
@@ -288,7 +289,7 @@ _OKCP.loadHoverOptions = function(updateCards) {
 		var isChecked = !(localStorage[storageKey] === "false")
 		var $wrapper = $(`<div class="${className}"> ${label}</div>`)
 		var $checkbox = $(`<input type="checkbox" ${isChecked && 'checked'} />`)
-		$checkbox.click(function(){
+		$checkbox.click(function(){ 
 			var newVal = localStorage[storageKey] === "false";
 			$(this).checked = newVal;
 			console.log(newVal);
@@ -296,8 +297,7 @@ _OKCP.loadHoverOptions = function(updateCards) {
 			$('.match-ratios-wrapper-outer-hover').remove();
 			console.log($('.match-ratios-wrapper-outer-hover'));
 			existingNames = [];
-			let cats = $('body').find(`.match-ratio-category`);
-			!getShowAllBool() && hideCats(cats);
+			!getShowAllBool() && hideCats();
 			updateCards();
 			purgeMismatches();
 		})
@@ -315,16 +315,17 @@ _OKCP.loadHoverOptions = function(updateCards) {
 		
 		createStorageControl('displayAllCategories', 'Show All Categories', $filterWrapper, 'show-all')
 		createStorageControl('hideWeakParticipants', 'HideWeakParticipants', $filterWrapper, 'hide-weak')
-		let $locationWrapper = getLocationsEl(updateCards);
-		$($filterWrapper).append($locationWrapper);
+		// let $locationWrapper = getLocationsEl(updateCards);
+		// $($filterWrapper).append($locationWrapper);
 	// 
 		setInterval(()=>{
-			const $newWrapper = getLocationsEl(updateCards);
-			console.log('lengths', $($newWrapper[0]).children().length, $($locationWrapper[0]).children().length);
-			if ($($newWrapper[0]).children().length == $($locationWrapper[0]).children().length) return;
-			console.log('swapping html');
+			updateLocationsEl()
+			// const $newWrapper = getLocationsEl(updateCards);
+			// console.log('lengths', $($newWrapper[0]).children().length, $($locationWrapper[0]).children().length);
+			// if ($($newWrapper[0]).children().length == $($locationWrapper[0]).children().length) return;
+			// console.log('swapping html');
 			
-			$locationWrapper[0].innerHTML = $newWrapper[0].innerHTML;
+			// $locationWrapper[0].innerHTML = $newWrapper[0].innerHTML;
 		}, 2000);
 		setMainResetBtn($filterWrapper);
 		setToggleBtn($filters, 'Toggle Filters');
@@ -384,17 +385,37 @@ function setToggleBtn($wrapper, label, id){
 	
 	$($wrapper).prepend($btn);
 }
-
-function getLocationsEl(updateCards){
-	return
+function uniques(arr1, arr2){
+	arr1.forEach(q => {
+		if (arr2.contains(q)) arr2 = arr2.filter(val => val!=q)
+	})
+	console.log({arr1, arr2})
+}
+function getDomLocations(){
 	let locations = $.map($('.userInfo-meta-location'), el => el.innerHTML.split(', ')[1])
-	locations = [...new Set(locations.sort( (a,b) => 
+	return [...new Set(locations.sort( (a,b) => 
 		(a.length-b.length != 0) ? b.length-a.length : b[0]-a[0]
 	)), 'ALL'];
+}
+
+function updateLocationsEl(){
+	const previousLocs = [...window.domLocations]
+	window.domLocations = getDomLocations();
+	if (window.domLocations.length!=previousLocs.length) {
+		const newLocs = window.domLocations.filter((o) => previousLocs.indexOf(o) == -1 );
+		console.log({newLocs});
+		getLocationsEl(newLocs);
+	}
+}
+function getLocationsEl(newLocations){
+
 	const chosenLocations = getChosenLocations();
-	// $('.category-wrapper.locations').remove();
-	const $wrapper = $(`<span class="category-wrapper locations"></span>`);
-	locations.forEach(location => {
+	
+	const $wrapper = $('.category-wrapper.locations').length 
+		? $('.category-wrapper.locations')
+	  : $(`<span class="category-wrapper locations"></span>`);
+		
+	newLocations.forEach(location => {
 		if (chosenLocations[location] === undefined) {
 			chosenLocations[location] = true;
 			localStorage.okcpChosenLocations = JSON.stringify(chosenLocations);
@@ -408,17 +429,12 @@ function getLocationsEl(updateCards){
 			chosenLocations[loc] = newVal;
 			localStorage.okcpChosenLocations = JSON.stringify(chosenLocations);
 			$(loc).attr("checked", newVal);
-			$('.match-ratios-wrapper-outer-hover').remove();
 			existingNames = [];
-			updateCards();
+			// updateCards();
 			purgeMismatches();
 		})
 
 	})
-	// $($wrapper).bind('DOMNodeInserted', () => {
-	// 	console.log('node inserted');
-	// 	purgeMismatches()
-	// });
 	setToggleBtn($wrapper, 'Toggle Locations');
 	
 	return $wrapper;
@@ -453,7 +469,10 @@ function getCats(){
 	return cats;
 }
 
-function hideCats(catgs){
+function hideCats($card){
+	if (!$card) return $('.userrow').each(function(){hideCats(this)})
+	
+	const catgs = $($card).find(`.match-ratio-category`);
 	const requiredCategories = getCats();
 	$(catgs).each(function(){
 		const domName = this.innerHTML;
@@ -468,9 +487,3 @@ function getShowAllBool(){return (localStorage.displayAllCategories == "false" ?
 function getHideWeakBool(){return (localStorage.hideWeakParticipants == "false" ? false : true)}
 function getChosenLocations(){return JSON.parse(localStorage.okcpChosenLocations || "{}") || {}}
 function spaces(str){ return str.replace(/(\-|_)/g, ' ') }
-String.prototype.toCamelCase = function() {
-    return this.replace(/^([A-Z])|\s(\w)/g, function(match, p1, p2, offset) {
-        if (p2) return p2.toUpperCase();
-        return p1.toLowerCase();        
-    });
-};

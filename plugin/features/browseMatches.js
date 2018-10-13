@@ -18,9 +18,8 @@ _OKCP.browseMatches = function() {
   }
   
   setInterval(()=>{
-    
     const cardNum = $(".match-results-card").length
-    const passNum = $("button[name='pass']").lengt
+    const passNum = $("button[name='pass']").length
     console.log({cardNum, passNum});
     if (cardNum > passNum) setPasses();
   }, 1000);

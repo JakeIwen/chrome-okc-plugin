@@ -6,18 +6,19 @@ _OKCP.likes = function() {
   const secondarySortSelector = '.userInfo-username'
   existingNames = [];
   const reverseSort = false;
+  const sort = false;
 
   function updateCards(){ 
     var els = $('.userrow');
     newNames = [];
     $(els).each(function(){
-      const thisName = $($(this).find('.userrow-thumb')[0]).attr('data-username')
+      const thisName = getName(this);
       if (!existingNames.includes(thisName)) newNames.push(thisName);
     })
     existingNames = existingNames.concat(newNames);
     if (newNames.length) {
       console.log('updating for ', newNames.length, 'cards');
-      var sorted = sortJqElements(els);
+      var sorted = sort ? sortJqElements(els) : els;
       modifyCards(sorted)
     }
   }
@@ -44,11 +45,11 @@ _OKCP.likes = function() {
   }
   function modifyCards(sorted){
     const answers = JSON.parse(localStorage.answers);
-    $('.userrow.is-liked-you').remove();
+    // $('.userrow.is-liked-you').remove();
 
     $(sorted).each(function(){
       const $card = $(this);
-      const thisName = $($(this).find('.userrow-thumb')[0]).attr('data-username')
+      const thisName = getName($card);
 
       if (newNames.includes(thisName)) {
         if (Object.keys(answers).includes('usr'+thisName)) {
@@ -56,13 +57,11 @@ _OKCP.likes = function() {
         }
         const href = 'https://www.okcupid.com/profile/'+thisName;
         
-        // if($(this).attr('href')){
-          const aHref = $(`<a class="mock-link"></a>`).attr('href', href)
-          $(this).find('img').css({height: '120px', width: '120px'});
-          $(this).prepend(aHref);
-          setPassBtn($card);
-          setCardResetBtn($card);
-        // }
+        const aHref = $(`<a class="mock-link"></a>`).attr('href', href)
+        $(this).find('img').css({height: '120px', width: '120px'});
+        $(this).prepend(aHref);
+        setPassBtn($card);
+        setCardResetBtn($card);
         browseAnswers($card, i);
       }
     })
@@ -88,17 +87,22 @@ _OKCP.likes = function() {
       $($btn).css({backgroundColor: 'red'});
       $($btn).click((event1)=>{
         event1.stopPropagation();
-        setLike($card, $btn, false);
+        setLike($card, false);
       })
     });
 
     $($card).append($btn);
 
 	}
-
+  
+  function getName($card){
+    try { return $($card).find("[href*='profile']")[0].href.split('/profile/')[1].split('?')[0] } 
+    catch (e) {return $($($card).find("[data-username]")[0]).attr('data-username')}
+  }
+  
   function setCardResetBtn($card){
     if ($($card).find('button[name="reset"]').length) return;
-    const thisName = $($(this).find('.userrow-thumb')[0]).attr('data-username')
+    const thisName = getName($card)
 		const $btn = $(`<button name="reset" class="binary_rating_button silver flatbutton reset-btn">
         <i class="icon i-star"></i>
         <span class="rating_like">Reset</span>
@@ -106,10 +110,10 @@ _OKCP.likes = function() {
     $($btn).click((event) => {
       var localAnswers = JSON.parse(window.answers);
       delete localAnswers['usr'+thisName];
-      console.log('localAnswers', localAnswers);
+      console.log({localAnswers, thisName});
       localStorage.answers = JSON.stringify(localAnswers);
       window.answers = JSON.stringify(localAnswers);
-      $('.match-ratios-list-hover.usr'+name).remove();
+      $($card).find('.match-ratios-wrapper-outer-hover').remove();
       console.log('reset');
     });
 
@@ -131,14 +135,13 @@ _OKCP.likes = function() {
     }
   }
 
-  function setLike($card, $btn, val){
+  function setLike($card, val){
     const userId = $($($card).find('.userrow-thumb')[0]).attr('data-username')
     const params = getLikePassParams(userId, val);
     const path = "/likes/batch";
     window.OkC.api(path, params).then(res => {
       console.log('res', res);
-
-      $($card).css({display: 'none'})
+      $($card).remove();
     }).catch(err => console.log(err));
   }
 
