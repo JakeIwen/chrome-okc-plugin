@@ -76,46 +76,56 @@
   width: 620px;
 }
 
+.filter-wrapper{
+  text-align: right;
+  right: 20px;
+  top: 20px;
+  position: fixed;
+  overflow: scroll;
+}
+
 .category-filters{
-  position: absolute; 
   top: 20px;
   right: -20px;
 }
 
 .mock-link{
-  position: absolute; 
-  top: 5px;
-  bottom: 5px;
-  left: 5px;
-  right: 5px;
+  top: 0px;
+  height: 120px;
+  width: 120px;
+  position: absolute;
+  z-index: 5;
+  /* bottom: 5px; */
+  left: 0px;
+  /* right: 5px; */
 }
 .show-all{
-  right: 250px; 
-  position: absolute; 
-  top: 15px; 
+  /* right: 250px;  */
+  /* top: 15px;  */
 }
 .hide-weak{
-  right: 250px; 
-  position: absolute; 
-  top: 45px; 
+  /* right: 250px;  */
+  /* top: 45px;  */
 }
 
 .pass-btn{
   right: 5px; 
+  transform: scale(0.5);
   position: absolute; 
   bottom: 5px; 
   z-index: 10;
 }
 .reset-btn{
   right: 5px; 
+  transform: scale(0.5);
   position: absolute; 
   top: 5px; 
   z-index: 10;
 }
 
 .reset-all-btn{
+  transform: scale(0.7);
   right: 5px; 
-  position: absolute; 
   top: 5px; 
   z-index: 10;
 }
@@ -181,8 +191,9 @@
 
 #okcp .match-ratio {
   position: relative;
-  margin-bottom: 2px;
+  margin-bottom: -5px;
   height: 20px;
+  transform: scale(0.7);
 }
 
 #okcp .match-ratio:last-child {
@@ -227,7 +238,8 @@
 }
 
 #okcp .match-ratio.not-a-match .match-ratio-category {
-  right: 8px;
+  right: -9px;
+  position: relative;
 }
 
 #okcp .match-ratio.not-a-match .match-ratio-category,

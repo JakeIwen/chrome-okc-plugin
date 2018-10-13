@@ -1,30 +1,37 @@
-_OKCP.getHoverAnswers = function ($card, requiredCategories, filterList) {
+_OKCP.getHoverAnswers = function ($card) {
+	const requiredCategories = getCats();
+	const showAll = getShowAllBool()
+	const hideWeak = getHideWeakBool()
+	
 	list = localStorage.okcpDefaultQuestions 
 		? JSON.parse(localStorage.okcpDefaultQuestions).questionsList 
 		: {};
 		
-	var name = ($($card).attr('href'))
-		? $($card).attr('href').split('profile/')[1].split('?')[0]
-		: $($card).find('[href]')[0].href.split('profile/')[1].split('?')[0];
-		
-	name = 'usr' + name;
+	var name = 'usr' + $($card).find('[data-username]').attr('data-username');
+
+	// var name = ($($card).attr('href'))
+	// 	? $($card).attr('href').split('profile/')[1].split('?')[0]
+	// 	: $($card).find('[href]')[0].href.split('profile/')[1].split('?')[0];
+	// 
 	
 	if ($('.match-ratios-wrapper-outer-hover.'+name).length) {
 		return;
 	}
 	
 	
-	console.log('checking for ', name);
+	// console.log('checking for ' + name.replace('\n', ''));
+	// console.log(requiredCategories);
 	var answers = JSON.parse(window.answers)
-	
 	var ratioList = $(`<table class="match-ratios-wrapper-outer-hover hover ${window.onLikes ? 'likes-view' : ''} ${name}"><tr><td class="match-ratios">
 		<ul class="match-ratios-list-hover ${name}"></ul>
 		</td></tr></table>`);
 		
 	if (answers[name] && answers[name].includes(name)) {
 		$($card).prepend(answers[name]);
-		purgeMismatches(answers[name]);
 		removeDupes();
+		let cats = $($card).find(`.match-ratio-category`);
+		!showAll && hideCats(cats);
+		purgeMismatches($card);
 		return;
 	}
 	
@@ -122,12 +129,16 @@ _OKCP.getHoverAnswers = function ($card, requiredCategories, filterList) {
 					category: category,
 					categoryReadable: category.split('_').join(' ')
 				});
+				
 				listItem.qid = listItem.qid+"-used";
 			}
 		}
-		
-		lastSuccess = $(this).html().length > 1000 ;
-		if (!lastSuccess) failed++;
+		var lastSuccess = $(this).html().length > 1000 ;
+		if (!lastSuccess) {
+			failed++;
+			console.log({xhr});
+			debugger;
+		}
 		if (numRequestsMade > 300) debugger;
 		if (numRequestsFinished >= Math.min(initialMaxRequests, numQuestionPages)) {
 			if (numRequestsFinished >= numQuestionPages){
@@ -137,7 +148,8 @@ _OKCP.getHoverAnswers = function ($card, requiredCategories, filterList) {
 				finished = true;
 				areWeDone();
 				saveAnswers();
-
+				let cats = $($card).find(`.match-ratio-category`);
+				!showAll && hideCats(cats);
 			} else if(numRequestsFinished >= numRequestsMade){
 				nextRequest();
 			} 
@@ -159,26 +171,28 @@ _OKCP.getHoverAnswers = function ($card, requiredCategories, filterList) {
 					.load(url, loadData);
 			}
 		})
-		
 	}
 	
 	function nextRequest(){
 		for (var i = 0; i < 10; i++) {
 			url = "//www.okcupid.com/profile/" + name + "/questions?n=2&low=" + (questionPageNum*10+1) + "&leanmode=1";
 			questionPageNum++;
-			
 			if (!requestFailed) {
 				numRequestsMade++;
-				console.log('reqs made', numRequestsMade);
-				$('<div class="page-results-' + questionPageNum + ' page-results-' + name + '"></div>')
-					.appendTo(pageResultsDiv)
-					.load(url, loadData);
+				!(numRequestsMade % 10) && console.log('reqs made', numRequestsMade);
+				try{
+					$('<div class="page-results-' + questionPageNum + ' page-results-' + name + '"></div>')
+						.appendTo(pageResultsDiv)
+						.load(url, loadData);
+				}catch(err){
+					console.log('TRYING AGAIN', err);
+					debugger;
+					$('<div class="page-results-' + questionPageNum + ' page-results-' + name + '"></div>')
+						.appendTo(pageResultsDiv)
+						.load(url, loadData);
+				}
 			}
-
 		}
-		
-	
-
 	}
 
 
@@ -215,29 +229,16 @@ _OKCP.getHoverAnswers = function ($card, requiredCategories, filterList) {
 		removeDupes();
 		
 		var html = ratioList[0].outerHTML;
-		console.log('html', html);
+		console.log('html', $(html));
 		
 		var answers = JSON.parse(window.answers);
-		answers[name] =  html;
+		answers[name] = html;
 		localStorage.answers = JSON.stringify(answers);
 		console.log('saved ' + name + 'to local storage');
-		purgeMismatches(html);
+		purgeMismatches($card);
 		
 		window.answers = JSON.stringify(answers).replace(/(\\n|\\t)*/g, '');
-	}
-	
-	function purgeMismatches(html){
-		$('.match-ratio-category').each(function(){
-			const domName = $(this).text()
-			const hasField = !requiredCategories.some(cat => spaces(domName).includes(spaces(cat)))
-			if (hasField) $(this).parent()	.remove();
-		})
-		if ( !requiredCategories.some(category => html.includes(category)) ) 
-			$($card).remove();
-	}
-	
-	function spaces(str){
-		return str.replace(/(\-|_)/g, ' ')
+
 	}
 	
 	function removeDupes(){
@@ -249,7 +250,7 @@ _OKCP.getHoverAnswers = function ($card, requiredCategories, filterList) {
 			var anchorCards = $($card).find('a.userrow-inner');
 			if (anchorCards.length > 1) {
 				$(anchorCards).each(function(idx){
-					if (idx) $(this).remove(); 
+					if (idx) $(this).remove();
 				})
 			}
 		} else if(onBrowseMatches) {
@@ -275,3 +276,201 @@ _OKCP.clearCachedQuestionData = function() {
 	localStorage.okcpRecentProfiles = JSON.stringify(recentProfiles);
 };
 
+_OKCP.loadHoverOptions = function(updateCards) {
+	setInterval(updateCards, 1000);
+	
+	const questions = JSON.parse(localStorage.okcpDefaultQuestions).questionsList;
+	
+  setTimeout(setFilters, 1000)
+
+	function createStorageControl(storageKey, label, containerSelector, className){
+		var $head = $(containerSelector)
+		var isChecked = !(localStorage[storageKey] === "false")
+		var $wrapper = $(`<div class="${className}"> ${label}</div>`)
+		var $checkbox = $(`<input type="checkbox" ${isChecked && 'checked'} />`)
+		$checkbox.click(function(){
+			var newVal = localStorage[storageKey] === "false";
+			$(this).checked = newVal;
+			console.log(newVal);
+			localStorage[storageKey] = newVal;
+			$('.match-ratios-wrapper-outer-hover').remove();
+			console.log($('.match-ratios-wrapper-outer-hover'));
+			existingNames = [];
+			let cats = $('body').find(`.match-ratio-category`);
+			!getShowAllBool() && hideCats(cats);
+			updateCards();
+			purgeMismatches();
+		})
+		$wrapper.appendTo($head)
+		$checkbox.appendTo($wrapper);
+	}
+
+	function setFilters(){
+		chosenCats = JSON.parse(localStorage.okcpChosenCategories || "{}") || {};
+
+		var $main = $('body');
+		
+		var $filterWrapper = $(`<div class="filter-wrapper"></div>`)
+		var $filters = $(`<div class="category-filters"></div>`)
+		
+		createStorageControl('displayAllCategories', 'Show All Categories', $filterWrapper, 'show-all')
+		createStorageControl('hideWeakParticipants', 'HideWeakParticipants', $filterWrapper, 'hide-weak')
+		let $locationWrapper = getLocationsEl(updateCards);
+		$($filterWrapper).append($locationWrapper);
+	// 
+		setInterval(()=>{
+			const $newWrapper = getLocationsEl(updateCards);
+			console.log('lengths', $($newWrapper[0]).children().length, $($locationWrapper[0]).children().length);
+			if ($($newWrapper[0]).children().length == $($locationWrapper[0]).children().length) return;
+			console.log('swapping html');
+			
+			$locationWrapper[0].innerHTML = $newWrapper[0].innerHTML;
+		}, 2000);
+		setMainResetBtn($filterWrapper);
+		setToggleBtn($filters, 'Toggle Filters');
+		
+		$($filterWrapper).append($filters)
+		$($main).append($filterWrapper);
+		Object.keys(questions).forEach(category => {
+			const shouldBeChecked = Boolean(chosenCats[category]);
+			const $wrapper = $(`<span class="category-wrapper"></span>`).appendTo($filters);
+			$wrapper.append(`${category} <input type="checkbox" cat-attr="${category}" ${shouldBeChecked && 'checked'} /><br />`)
+
+			$($wrapper).click(function(){
+				const cat = $(this).find("[cat-attr]").attr("cat-attr");
+				const newVal = !chosenCats[cat];
+				chosenCats[cat] = newVal;
+				localStorage.okcpChosenCategories = JSON.stringify(chosenCats);
+				$(cat).attr("checked", newVal);
+				$('.match-ratios-wrapper-outer-hover').remove();
+				existingNames = [];
+				updateCards();
+				purgeMismatches();
+			})
+
+		})
+	}
+
+	function setMainResetBtn($wrapper){
+		const $btn = $(`<button name="reset" class="binary_rating_button silver flatbutton reset-all-btn">
+				<span class="rating_like">Reset</span>
+			</button>`)
+		$($btn).click((event) => {
+			window.answers = "{}";
+			localStorage.answers = "{}";
+			$('.match-ratios-wrapper-outer-hover').remove();
+			console.log('reset storage complete');
+		});
+		$($wrapper).append($btn);
+	}
+
+}
+
+function setToggleBtn($wrapper, label, id){
+	// showOkcpFilters = JSON.pa(localStorage.showOkcpFilters);
+	
+	const $btn = $(`<button name="reset" class="">
+			<span class="rating_like">${label}</span>
+		</button>`)
+	$($btn).click((event) => {
+		const show = localStorage['showOkcpFilters'+label] === 'true';
+		$($wrapper).children().each(function(){ 
+			show ? $(this).show() : $(this).hide();
+		});
+		$($btn).show();
+		
+		localStorage['showOkcpFilters'+label] = !show;
+	});
+	
+	$($wrapper).prepend($btn);
+}
+
+function getLocationsEl(updateCards){
+	return
+	let locations = $.map($('.userInfo-meta-location'), el => el.innerHTML.split(', ')[1])
+	locations = [...new Set(locations.sort( (a,b) => 
+		(a.length-b.length != 0) ? b.length-a.length : b[0]-a[0]
+	)), 'ALL'];
+	const chosenLocations = getChosenLocations();
+	// $('.category-wrapper.locations').remove();
+	const $wrapper = $(`<span class="category-wrapper locations"></span>`);
+	locations.forEach(location => {
+		if (chosenLocations[location] === undefined) {
+			chosenLocations[location] = true;
+			localStorage.okcpChosenLocations = JSON.stringify(chosenLocations);
+		}
+		const shouldBeChecked = Boolean(chosenLocations[location]);
+		$wrapper.append(`${location} <input type="checkbox" loc-attr="${location}" ${shouldBeChecked && 'checked'} /><br />`)
+
+		$($wrapper).click(function(){
+			const loc = $(this).find("[loc-attr]").attr("loc-attr");
+			const newVal = !chosenLocations[loc];
+			chosenLocations[loc] = newVal;
+			localStorage.okcpChosenLocations = JSON.stringify(chosenLocations);
+			$(loc).attr("checked", newVal);
+			$('.match-ratios-wrapper-outer-hover').remove();
+			existingNames = [];
+			updateCards();
+			purgeMismatches();
+		})
+
+	})
+	// $($wrapper).bind('DOMNodeInserted', () => {
+	// 	console.log('node inserted');
+	// 	purgeMismatches()
+	// });
+	setToggleBtn($wrapper, 'Toggle Locations');
+	
+	return $wrapper;
+}
+
+function purgeMismatches($card){
+	if (!$card) {
+		$('.userrow').show();
+		return $('.userrow').each(function(){purgeMismatches(this)})
+	}
+	
+	if (getHideWeakBool()) {
+		const $visCats = $($card).find('.match-ratios-list-hover');
+		if (!$($visCats).children(':visible').not('.not-a-match').length) 
+			return $($card).hide();
+	}
+	
+	const locations = getChosenLocations();
+	
+	const loc = $($card).find('.userInfo-meta-location')[0].innerHTML.split(', ')[1];
+	if (!(locations[loc] || locations['ALL'])) {
+		console.log('removing for loc', {loc, locations});
+		return $($card).hide();
+	}
+	$($card).show();
+		
+}
+
+function getCats(){
+	const chosenCats = JSON.parse(localStorage.okcpChosenCategories || "{}") || {}
+	const cats = Object.keys(chosenCats).filter(key => chosenCats[key]);
+	return cats;
+}
+
+function hideCats(catgs){
+	const requiredCategories = getCats();
+	$(catgs).each(function(){
+		const domName = this.innerHTML;
+		const missingFields = !requiredCategories.some(cat => {
+			return spaces(domName).includes(spaces(cat)) || spaces(cat).includes(spaces(domName))
+		})
+		missingFields ? $(this).parent().hide() : $(this).parent().show();
+	})
+}
+
+function getShowAllBool(){return (localStorage.displayAllCategories == "false" ? false : true)}
+function getHideWeakBool(){return (localStorage.hideWeakParticipants == "false" ? false : true)}
+function getChosenLocations(){return JSON.parse(localStorage.okcpChosenLocations || "{}") || {}}
+function spaces(str){ return str.replace(/(\-|_)/g, ' ') }
+String.prototype.toCamelCase = function() {
+    return this.replace(/^([A-Z])|\s(\w)/g, function(match, p1, p2, offset) {
+        if (p2) return p2.toUpperCase();
+        return p1.toLowerCase();        
+    });
+};
