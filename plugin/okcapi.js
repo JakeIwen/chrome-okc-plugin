@@ -113,7 +113,7 @@ window.OkC = {
 		}
 
 		let baseHeaders = {
-			"X-OkCupid-Platform": "mobile",
+			"X-OkCupid-Platform": "DESKTOP",
 		};
 
 		if (

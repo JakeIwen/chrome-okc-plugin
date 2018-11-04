@@ -1,35 +1,57 @@
 
 _OKCP.likes = function() {
   _OKCP.loadHoverOptions(updateCards);
-  
+  window.cardSelector = '.userrow'
   const primarySortSelector = '.match-info-percentage'
   const secondarySortSelector = '.userInfo-username'
   existingNames = [];
   const reverseSort = false;
-  const sort = false;
-
+  const sort = true;
+  
+  
+  var insertedNodes = [];
+  var observer = new WebKitMutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+          for(var i = 0; i < mutation.addedNodes.length; i++)
+              insertedNodes.push(mutation.addedNodes[i]);
+      })
+  });
+  // observer.observe(document, {
+  //     childList: true
+  // });
+  // 
+  
+  
+  
+  function noMoreMatches(){
+    return !!$('.userrow-bucket-heading:contains("You like them")').length
+  }
+  // setInterval(()=>{
+  //   console.log({observer, insertedNodes});
+  // }, 1000)
   function updateCards(){ 
-    var els = $('.userrow');
+    var els = $(window.cardSelector);
     newNames = [];
     $(els).each(function(){
-      const thisName = getName(this);
+      const thisName = _OKCP.getUserName(this);
       if (!existingNames.includes(thisName)) newNames.push(thisName);
     })
     existingNames = existingNames.concat(newNames);
     if (newNames.length) {
       console.log('updating for ', newNames.length, 'cards');
       var sorted = sort ? sortJqElements(els) : els;
-      modifyCards(sorted)
+      
+      modifyCards(sorted, newNames)
     }
   }
 
   console.log('allq', questions);
 
   function browseAnswers($card, i) {
-    $($card).hover(()=>_OKCP.getHoverAnswers($card))
+    $($card).hover(()=>_OKCP.getHoverAnswers($card, window.cardSelector))
   }
 
-  function sortJqElements($els){
+  function sortJqElements($els, moveToEnd){
     return $($els).sort((a,b)=>{
       var foundA = $(a).find(primarySortSelector)
       var foundB = $(b).find(primarySortSelector)
@@ -43,17 +65,26 @@ _OKCP.likes = function() {
       return reverseSort ? percA - percB : percB - percA;
     })
   }
-  function modifyCards(sorted){
-    const answers = JSON.parse(localStorage.answers);
-    // $('.userrow.is-liked-you').remove();
+  function modifyCards(sorted, newNames){
+    const hideNew = noMoreMatches();
+    const answers = window.answers;
 
     $(sorted).each(function(){
       const $card = $(this);
-      const thisName = getName($card);
+      const thisName = _OKCP.getUserName($card);
+      
+      // if (hideNew){
+      //   if (newNames.includes(thisName)) {
+      //     console.log(newNames, ' includes ', thisName);
+      //     return $($card).hide();
+      //   } else {
+      //     return;
+      //   }
+      // } 
 
       if (newNames.includes(thisName)) {
         if (Object.keys(answers).includes('usr'+thisName)) {
-          _OKCP.getHoverAnswers($card)
+          _OKCP.getHoverAnswers($card, window.cardSelector)
         }
         const href = 'https://www.okcupid.com/profile/'+thisName;
         
@@ -95,14 +126,9 @@ _OKCP.likes = function() {
 
 	}
   
-  function getName($card){
-    try { return $($card).find("[href*='profile']")[0].href.split('/profile/')[1].split('?')[0] } 
-    catch (e) {return $($($card).find("[data-username]")[0]).attr('data-username')}
-  }
-  
   function setCardResetBtn($card){
     if ($($card).find('button[name="reset"]').length) return;
-    const thisName = getName($card)
+    const thisName = _OKCP.getUserName($card)
 		const $btn = $(`<button name="reset" class="binary_rating_button silver flatbutton reset-btn">
         <i class="icon i-star"></i>
         <span class="rating_like">Reset</span>

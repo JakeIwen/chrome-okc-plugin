@@ -18,12 +18,14 @@
     "notifications",
     "contentSettings",
     "unlimitedStorage",
+    "webRequest",
+    "webRequestBlocking",
     "http://*.okcupid.com/*",
     "https://*.okcupid.com/*"
   ],
   "background": {
     "scripts": ["features/eventPage.js"],
-    "persistent": false
+    "persistent": true
   },
   "content_scripts": [
     {

@@ -84,7 +84,7 @@ $(function(){
 
 				window.OkPay.import(data);
 				this.markOpenTime();
-
+				console.log('paltform', process.env.PLATFORM );
 				const platform = process.env.PLATFORM == "desktop" ? "desktop" : "mobile";
 
 				ClientStats.update({
@@ -170,7 +170,13 @@ window.Product = Product;
 	var onPageProfile = $('#p_profile').length > 0;
 	var onBrowseMatches = window.location.pathname=='/match';
 	window.onLikes = window.location.pathname=='/who-you-like';
-	window.answers = localStorage.answers || "{}";
+	
+	try {
+		window.answers = JSON.parse(_OKCP.lz().decompress(localStorage.getItem('answers'), {inputEncoding: "StorageBinaryString"}));
+	} catch (e) {
+		window.answers = JSON.parse(localStorage.getItem('answers') || "{}");
+		console.log('get uncompressed answers');
+	}
 	window.numAnswers = 0;
 	window.inProgress = {};
 	
@@ -215,15 +221,19 @@ window.Product = Product;
 	function verifyTokenPresence() {
 		window.CURRENTUSERID = "49246541853129158";
 		const settings = localStorage.okcpSettings;
+		console.log('at', window.ACCESS_TOKEN);
 		const tokenIsOld = (Date.now()-(localStorage.okcpTokenLastUpdated || 0)) > 60*60*2.75*1000;
-		window.ACCESS_TOKEN = settings.ACCESS_TOKEN;
-		if(tokenIsOld || !window.ACCESS_TOKEN) {
-			console.log('getting new token');
-			window.OkC.getNewAccessToken().then(tokenres => {
-				settings.ACCESS_TOKEN = tokenres.authcode;
-				localStorage.okcpTokenLastUpdated = Date.now();
-			});
-		}
+		window.ACCESS_TOKEN = "1,0,1541391361,0xaef578099279c6;edecbde81f805dba399354d8a452a781fa7e64af";
+		// if(true || tokenIsOld || !window.ACCESS_TOKEN) {
+		// 	window.OkC.getNewAccessToken().then(tokenres => {
+		// 		console.log('getting new token', tokenres);
+		// 
+		// 		settings.ACCESS_TOKEN = tokenres.authcode;
+		// 		window.ACCESS_TOKEN = tokenres.authcode;
+		// 		console.log('at', window.ACCESS_TOKEN);
+		// 		localStorage.okcpTokenLastUpdated = Date.now();
+		// 	});
+		// }
 	}
 	
 });

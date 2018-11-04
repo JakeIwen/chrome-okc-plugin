@@ -1,3 +1,5 @@
+
+
 #logo .okcp-improved-link {
   position: absolute;
   top: 45px;
@@ -16,6 +18,11 @@
 
 .btn {
   cursor: pointer;
+}
+
+.button-ctr{
+  display: inline-block;
+  /* width: 120%; */
 }
 
 /* UI - Buttons */
@@ -76,10 +83,10 @@
   width: 620px;
 }
 
-.filter-wrapper{
+.custom-filter-wrapper{
   text-align: right;
   right: 20px;
-  top: 20px;
+  top: 100px;
   position: fixed;
   overflow: scroll;
 }
@@ -131,10 +138,11 @@
 }
 
 .match-ratios-wrapper-outer-hover {
-  position: absolute;
+  position: relative;
   max-height: 350px;
   overflow-y: scroll;
-  width: 225px;
+  overflow-x: scroll;
+  width: 170px;
   z-index: 5;
   border-radius: 10px;
 }
@@ -142,8 +150,9 @@
   right: 125px;
   max-height: 500px;;
 }
-.match-ratios-wrapper-outer-hover.hover{
+.match-ratios-wrapper-outer-hover{
   max-height: 225px;
+  
 }
 .match-ratios-wrapper-outer-hover.hover * {
   /* visibility: hidden; */
