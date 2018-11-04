@@ -11,7 +11,6 @@ _OKCP.browseMatches = function() {
   $(showBtn).click(()=>{
     show = true;
     $('body').empty();
-    
     console.log({cards});
     $(cards).each(function(){
       $(this).css('display', 'inline-block')
@@ -21,9 +20,9 @@ _OKCP.browseMatches = function() {
       
       $(this).find('.match-ratios-wrapper-outer-hover.' + thisName).remove();
       _OKCP.getHoverAnswers(this, 'browse')
-      // browseAnswers(this);
-      setTimeout(()=>setPasses(), 500)
     })
+    setTimeout(()=>setPasses(), 500)
+    
     
     
     $('body').prepend(showBtn);
@@ -33,9 +32,7 @@ _OKCP.browseMatches = function() {
         _OKCP.getHoverAnswers(this, 'browse')
       })
     });
-    // o
-    // $(cards).find("button[name='pass']").remove();
-    // $(cards).find("button[name='like']").remove();
+
   })
   $('body').prepend(showBtn);
   const $likeBtnTemplate = $(`<button name="like" style=transform:scale(0.7) class="btn-ctr"><span class="rating_like">Like</span></button>`)
@@ -44,23 +41,16 @@ _OKCP.browseMatches = function() {
   
   function resetUser(e, $card, $btn, val){
     e.preventDefault();
-    const thisName = _OKCP.getUserName($card)
-    var localAnswers = JSON.parse(window.answers);
-    delete localAnswers['usr'+thisName];
-    console.log({localAnswers, thisName});
-    localStorage.answers = JSON.stringify(localAnswers);
-    window.answers = JSON.stringify(localAnswers);
+    const thisName = _OKCP.getUserName($card);
+    delete window.answers['usr'+thisName];
+    _OKCP.saveCompressed('answers', window.answers);
     $($card).find('.match-ratios-wrapper-outer-hover').remove();
     console.log('reset');
-
-    // $($card).append($btn);
 	}
   
   setInterval(()=>{
-    console.log('int');
     const cardNum = $(window.cardSelector).length
     const passNum = $("button[name='pass']").length
-    console.log({cardNum, passNum});
     if (cardNum > passNum) setPasses();
   }, 2000);
 
@@ -82,7 +72,8 @@ _OKCP.browseMatches = function() {
         if (res.results[0].mutual_like) {
           $($card).css({backgroundColor: 'green'})
           console.log('MUTUAL LIKE');
-          setTimeout(()=>$($card).css({display: 'none'}), 2200)
+        } else if (val){
+          $($btn).css({display: 'none'})
         } else {
           $($card).css({display: 'none'})
         }
@@ -100,7 +91,6 @@ _OKCP.browseMatches = function() {
       if ((passList || []).includes(newId)) $(this).remove();
       if($('#'+newId+' .match-ratio-category:visible').length && !$(cards).find('#'+newId).length && newId!=='usrundefined' && !show){
         console.log('adding card');
-        // debugger;
         cards.push(this);
       }
       if ($('#'+newId).length) {
@@ -124,14 +114,13 @@ _OKCP.browseMatches = function() {
       $likeBtn.click((e)=>setLike(e, this, $likeBtn, true));
       $resetBtn.click((e)=>resetUser(e, this, $resetBtn));
       const $percent = $(this).find('.match-info-percentage');
-
-
+      if($(this).find('.match-info-liked.okicon.i-star').length) $($likeBtn).hide();
+        
       const $userInfo = $(this).find('.userInfo');
       let $btnRow = $('<div class="button-ctr"></div>');
       
       $($btnRow).append([$likeBtn, $resetBtn, $passBtn]);
       $($userInfo).append($btnRow);
-
       if (removeLiked && $(this).find('div.match-info-liked.okicon.i-star').length) return $(this).remove();
     })
   }
@@ -157,9 +146,7 @@ _OKCP.browseMatches = function() {
   }
   
   function browseAnswers($card, i) {
-    $($card).find('.usercard-thumb').hover(()=>{
-      _OKCP.getHoverAnswers($card, 'browse')
-    })
+    $($card).find('.usercard-thumb').hover(() => _OKCP.getHoverAnswers($card, 'browse') )
   }
   
   return true;

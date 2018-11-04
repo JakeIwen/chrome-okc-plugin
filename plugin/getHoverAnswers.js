@@ -154,7 +154,6 @@ _OKCP.getHoverAnswers = function ($card, fromPage) {
 					name: name,
 					categoryReadable: category.split('_').join(' ')
 				});
-				
 				listItem.qid = listItem.qid+"-used";
 			}
 		}
@@ -222,8 +221,7 @@ _OKCP.getHoverAnswers = function ($card, fromPage) {
 		
 		if (!(Object.keys(window.answers).length % 4)) {
 			console.log('saving 4 answer sets');
-			const compressed = _OKCP.lz().compress(JSON.stringify(window.answers), {outputEncoding: "StorageBinaryString"})
-			localStorage.setItem('answers', compressed);
+			_OKCP.saveCompressed('answers', window.answers);
 		}
 		
 		
@@ -307,7 +305,11 @@ _OKCP.getHoverAnswers = function ($card, fromPage) {
 	}
 
 };
-
+_OKCP.saveCompressed = function(key, value){
+	const compressed = _OKCP.lz().compress(JSON.stringify(value), {outputEncoding: "StorageBinaryString"})
+	localStorage.setItem(key, compressed);
+	console.log('saved');
+}
 _OKCP.clearCachedQuestionData = function() {
 	console.log("cleared cached question data");
 	var recentProfiles = JSON.parse(localStorage.getItem(okcpRecentProfiles));
