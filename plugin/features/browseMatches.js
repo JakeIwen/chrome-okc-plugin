@@ -29,11 +29,17 @@ _OKCP.browseMatches = function() {
   }, 1500);
   $(hideLikedBtn).click(()=>{
     console.log('click');
-    $(`.match-results-card button[name="like"][disabled]`)
+    $(`.match-info-liked.okicon.i-star`)
       .closest(`.match-results-card`).hide()
   });
   let show = false; 
-  $(evalBtn).click(() => setPasses(!!$('#showEl').length))
+  
+  $(evalBtn).click(() => {
+    $('#showEl').children().each(function(){
+      $(this).find("match-ratios-wrapper-outer-hover").remove();
+      _OKCP.getHoverAnswers(this);
+    })
+  })
   $(showBtn).click(()=>{
     show = !show;
     console.log({cards});
@@ -175,7 +181,10 @@ _OKCP.browseMatches = function() {
       $passBtn.click((e)=>setLike(e, this, $passBtn, false));
       $likeBtn.click((e)=>setLike(e, this, $likeBtn, true));
       $resetBtn.click((e)=>_OKCP.resetUser(e, this, $resetBtn));
-      if (showMode) debugger;
+      // if (showMode && !$(this).find('.match-ratio-category:visible').length){
+      //   console.log('amending card', this, newId);
+      //   _OKCP.getHoverAnswers(this)
+      // }
       if(likedByYou) $($likeBtn).attr("disabled", "disabled");
         
       const $btnRow = $('<div class="button-ctr"></div>').append([$likeBtn, $resetBtn, $passBtn]);
