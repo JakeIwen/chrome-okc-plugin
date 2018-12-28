@@ -355,22 +355,26 @@ _OKCP.loadHoverOptions = function() {
 		const chosenCats = getChosenCats();
 		const $main = $('body');
 		const $filterWrapper = $(`<div class="custom-filter-wrapper"></div>`)
-		const $filters = $(`<div class="category-filters"></div>`)
+		const $catFilters = $(`<div class="category-filters"></div>`)
+		
 		const controlDiv = $(`<div class="control-div"></div>`);
 		_OKCP.createStorageControl('displayAllCategories', 'Show All Categories', controlDiv, 'show-all')
 		_OKCP.createStorageControl('hideWeakParticipants', 'HideWeakParticipants', controlDiv, 'hide-weak')
-
-		setInterval(()=>_OKCP.updateLocationsEl($filterWrapper), 2000);
-		setMainResetBtn($filterWrapper);
-		$($filterWrapper).append($filters);
+		setMainResetBtn(controlDiv);
 		$($filterWrapper).append(controlDiv);
+		
+		setInterval(()=>_OKCP.updateLocationsEl($filterWrapper), 2000);
+		$($filterWrapper).append($catFilters);
+		$catFilters.append(`<h4>Categories</h4>`)
+
+
 		$($main).append($filterWrapper);
 		
 		const questions = JSON.parse(localStorage.okcpDefaultQuestions).questionsList;
 		
 		Object.keys(questions).forEach(category => {
 			const shouldBeChecked = Boolean(chosenCats[category]);
-			const $wrapper = $(`<ul class="category-wrapper"></ul>`).appendTo($filters);
+			const $wrapper = $(`<ul class="category-wrapper"></ul>`).appendTo($catFilters);
 			$wrapper.append(`<li>${category} <input type="checkbox" cat-attr="${category}" ${shouldBeChecked && 'checked'} /></li>`)
 			$($wrapper).click(function(){
 				console.log('wrapper', this);
@@ -382,12 +386,24 @@ _OKCP.loadHoverOptions = function() {
 				$('.match-ratios-wrapper-outer-hover').remove();
 				existingNames = [];
 				_OKCP.updateCards();
-				//// TODO: fix updatecrds
 				purgeMismatches();
 			})
 		})
 		
-		_OKCP.setToggleBtn($filters, 'Toggle Filters');
+		const aList = $(`#navigation > div.nav-left > ul > li:nth-child(3)`).empty();
+		const $showFiltersBtn = $(`<a><span class="text"> Custom Filters </span></a>`)
+		$(aList).prepend($showFiltersBtn);
+		$($showFiltersBtn).click(()=>clickToggle());
+		clickToggle(true);
+		
+		function clickToggle(init){
+			const show = init ? false : window['showOkcpFilters'];
+			window['showOkcpFilters'] = !show;
+			console.log(`window['showOkcpFilters'] `, window['showOkcpFilters'] );
+			show ? $($filterWrapper).hide() : $($filterWrapper).show();
+			$($showFiltersBtn).show();
+		}
+
 	}
 
 	function setMainResetBtn($wrapper){
@@ -405,20 +421,7 @@ _OKCP.loadHoverOptions = function() {
 	}
 }
 
-_OKCP.setToggleBtn = function($wrapper, label, id){
-	const $btn = $(`<button name="reset" class="toggle"><span class="rating_like">${label}</span></button>`)
-	$($wrapper).prepend($btn);
-	$($btn).click(()=>clickToggle());
-	clickToggle(true);
-	function clickToggle(init){
-		console.log('clickTOggle');
-		const show = init ? false : window['showOkcpFilters'+label];
-		window['showOkcpFilters'+label] = !show;
-		show ? $($wrapper).children().hide() : $($wrapper).children().show();
-		$($btn).show();
-	}
-	$($btn).click();
-}
+
 
 _OKCP.updateLocationsEl = function($filterWrapper){
 	console.log({$filterWrapper});
@@ -428,10 +431,10 @@ _OKCP.updateLocationsEl = function($filterWrapper){
 	
 	if (!$($filterWrapper).find('.location-filters').length) {
 		console.log('remove');
-		const $locWrapper = $(`<div class="location-filters"></div>`);
+		const $locWrapper = $(`<div class="location-filters"><h3>Locations</h3></div>`);
 		$($filterWrapper).append($locWrapper);
 	}
-	
+	// 
 	if (window.domLocations.length != previousLocs.length) {
 		localStorage['showOkcpFiltersToggle Locations'] && _OKCP.populateLocationsEl(window.domLocations);
 	}
@@ -441,7 +444,7 @@ _OKCP.populateLocationsEl = function(locations){
 	
 	const chosenLocations = getChosenLocations();
 	const $wrapper = $('.location-filters');
-	$($wrapper).empty();
+	$($wrapper).empty().append(`<h3>Locations</h3>`);
 	locations.forEach(location => {
 		if (chosenLocations[location] === undefined) {
 			chosenLocations[location] = true;
@@ -449,9 +452,6 @@ _OKCP.populateLocationsEl = function(locations){
 		}
 		const shouldBeChecked = Boolean(chosenLocations[location]);
 		var locEl = $(`<div>${location} <input class="locattr" type="checkbox" loc-attr="${location}" ${shouldBeChecked && 'checked'} /></div>`);
-		// $(locEl).click(function(){
-		// 	console.log('hi', this);
-		// })
 		$wrapper.append(locEl)
 	})
 	$('[loc-attr]').click(function(){
@@ -466,7 +466,7 @@ _OKCP.populateLocationsEl = function(locations){
 		purgeMismatches();
 	})
 	
-	_OKCP.setToggleBtn($wrapper, 'Toggle Locations');
+	// _OKCP.setToggleBtn($wrapper, 'Toggle Locations');
 	
 	return $wrapper;
 }
