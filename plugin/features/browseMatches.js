@@ -3,6 +3,9 @@
 _OKCP.browseMatches = function() {
   // return;
   window.cardSelector = ".match-results-card";
+  const $likeBtnTemplate = $(`<button name="like" style=transform:scale(0.7) class="btn-ctr"><span class="rating_like">Like</span></button>`)
+  const $resetBtnTemplate = $(`<button name="reset" style=transform:scale(0.7) class="btn-ctr"><span class="rating_reset">Reset</span></button>`)
+  const $passBtnTemplate = $(`<button name="pass" style=transform:scale(0.7) class="btn-ctr"><span class="rating_like">Pass</span></button>`)
   
   const removeLiked = false;
   const cards = [] 
@@ -67,19 +70,14 @@ _OKCP.browseMatches = function() {
     setTimeout(()=>setPasses(true), 500)
     setTimeout(()=>setPasses(true), 3000)
     
-    // $('body').prepend(showBtn);
-    // $('body').prepend(hideLikedBtn);
-
   })
   $('body').prepend(evalBtn, showBtn, hideLikedBtn);
-  const $likeBtnTemplate = $(`<button name="like" style=transform:scale(0.7) class="btn-ctr"><span class="rating_like">Like</span></button>`)
-  const $resetBtnTemplate = $(`<button name="reset" style=transform:scale(0.7) class="btn-ctr"><span class="rating_reset">Reset</span></button>`)
-  const $passBtnTemplate = $(`<button name="pass" style=transform:scale(0.7) class="btn-ctr"><span class="rating_like">Pass</span></button>`)
   
   setInterval(()=>{
     $(`${window.cardSelector}:not([added]):visible > :not(.usercard-placeholder)`).parent().each(function(){_OKCP.getHoverAnswers(this, 'browse')})
     const cardNum = $(window.cardSelector).length
-    const passNum = $("button[name='pass']").length
+    const passNum = $("button[name='pass']:visible").length
+    console.log({cardNum, passNum});
     if (cardNum > passNum) setPasses();
     else !$('#showEl').length && scrollIfReady();
     
@@ -88,9 +86,6 @@ _OKCP.browseMatches = function() {
   function scrollIfReady() {
     if ($('.usercard-placeholder').length) return;
     
-    // jQuery('.clear-tag').length 
-    //   ? console.log(jQuery('.clear-tag').trigger('click'))
-    //   : console.log(jQuery('.page-featured *').each(function(){$(this)[0].dispatchEvent(new Event("change"))}));
     if($('.match-results-error').length) {
       var showHtml = '';
       cards.forEach(card => showHtml += $('<div>').append($(card)).html());
@@ -132,8 +127,6 @@ _OKCP.browseMatches = function() {
         }
       }).catch(err => console.log(err));
       
-      
-      
     });
 
   }
@@ -141,10 +134,10 @@ _OKCP.browseMatches = function() {
   function setPasses(showMode) {
     $(`${window.cardSelector}${showMode ? '[added]' : ':not([added])'} > :not(.usercard-placeholder)`).parent().each(function(i) {
       const newId = 'usr' + _OKCP.getUserName(this)
-      // console.log(newId);
       const likedByYou = $(this).find('.match-info-liked.okicon.i-star').length;
       if (removeLiked && likedByYou) return $(this).remove();
       if(!showMode && $('#'+newId+' .match-ratio-category:visible').length){
+        console.log('IN');
         if(!cardIds.includes(newId)){
           console.log('adding card');
           $(this).attr('added', true);
@@ -181,16 +174,13 @@ _OKCP.browseMatches = function() {
       $passBtn.click((e)=>setLike(e, this, $passBtn, false));
       $likeBtn.click((e)=>setLike(e, this, $likeBtn, true));
       $resetBtn.click((e)=>_OKCP.resetUser(e, this, $resetBtn));
-      // if (showMode && !$(this).find('.match-ratio-category:visible').length){
-      //   console.log('amending card', this, newId);
-      //   _OKCP.getHoverAnswers(this)
-      // }
+
       if(likedByYou) $($likeBtn).attr("disabled", "disabled");
         
       const $btnRow = $('<div class="button-ctr"></div>').append([$likeBtn, $resetBtn, $passBtn]);
       
       $(this).find('.userInfo').append($btnRow);
-      })
+    })
   }
   
   return true;

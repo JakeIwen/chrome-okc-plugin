@@ -20,7 +20,7 @@ _OKCP.getHoverAnswers = function ($card) {
 		$($($card).find(`.user${window.onLikes ? 'row' : 'card'}-info`)[0]).after(answers[name]);
 	
 		removeDupes();
-		purgeMismatches($card);
+		_OKCP.purgeMismatches($card);
 		// saveCard();
 		return;
 	}
@@ -225,7 +225,7 @@ _OKCP.getHoverAnswers = function ($card) {
 		}
 		
 		
-		purgeMismatches($card);
+		_OKCP.purgeMismatches($card);
 			
 		saveQuestions();
 		// saveCard();
@@ -333,44 +333,42 @@ _OKCP.createStorageControl = function(storageKey, label, containerSelector, clas
 		console.log('click');
 		var newVal = localStorage[storageKey] === "false";
 		$(this).checked = newVal;
-		console.log(newVal);
 		localStorage[storageKey] = newVal;
 		console.log('removing', $('.match-ratios-wrapper-outer-hover'));
 		
 		$('.match-ratios-wrapper-outer-hover').remove();
-		existingNames = [];
-		// _OKCP.updateCards();
-		purgeMismatches();
+		window.existingNames = [];
+		_OKCP.updateCards();
+		_OKCP.purgeMismatches();
 	})
 	$wrapper.appendTo($head)
 	$checkbox.appendTo($wrapper);
 }
 
 _OKCP.loadHoverOptions = function() {
+	window.existingNames = [];
 	setInterval(_OKCP.updateCards, 1000);
 	
   setTimeout(setFilters, 1000)
-
+	
 	function setFilters(){
-		const chosenCats = getChosenCats();
-		const $main = $('body');
-		const $filterWrapper = $(`<div class="custom-filter-wrapper"></div>`)
-		const $catFilters = $(`<div class="category-filters"></div>`)
+		
+		const $catFilters = $(`<div class="category-filters"><h4>Categories</h4></div>`)
+		const $locWrapper = $(`<div class="location-filters"><h3>Locations</h3></div>`);
 		
 		const controlDiv = $(`<div class="control-div"></div>`);
 		_OKCP.createStorageControl('displayAllCategories', 'Show All Categories', controlDiv, 'show-all')
 		_OKCP.createStorageControl('hideWeakParticipants', 'HideWeakParticipants', controlDiv, 'hide-weak')
 		setMainResetBtn(controlDiv);
-		$($filterWrapper).append(controlDiv);
 		
-		setInterval(()=>_OKCP.updateLocationsEl($filterWrapper), 2000);
-		$($filterWrapper).append($catFilters);
-		$catFilters.append(`<h4>Categories</h4>`)
-
-
-		$($main).append($filterWrapper);
+		const $filterWrapper =  $(`<div class="custom-filter-wrapper"></div>`)
+															.append(controlDiv, $catFilters, $locWrapper)
+															.hide();
 		
-		const questions = JSON.parse(localStorage.okcpDefaultQuestions).questionsList;
+		$('body').append($filterWrapper);
+		
+		const questions = _OKCP.parseStorageObject('okcpDefaultQuestions');
+		const chosenCats = _OKCP.parseStorageObject('okcpChosenCategories');
 		
 		Object.keys(questions).forEach(category => {
 			const shouldBeChecked = Boolean(chosenCats[category]);
@@ -384,9 +382,9 @@ _OKCP.loadHoverOptions = function() {
 				localStorage.okcpChosenCategories = JSON.stringify(chosenCats);
 				$(cat).attr("checked", newVal);
 				$('.match-ratios-wrapper-outer-hover').remove();
-				existingNames = [];
+				window.existingNames = [];
 				_OKCP.updateCards();
-				purgeMismatches();
+				_OKCP.purgeMismatches();
 			})
 		})
 		
@@ -394,7 +392,7 @@ _OKCP.loadHoverOptions = function() {
 		const $showFiltersBtn = $(`<a><span class="text"> Custom Filters </span></a>`)
 		$(aList).prepend($showFiltersBtn);
 		$($showFiltersBtn).click(()=>clickToggle());
-		clickToggle(true);
+		// clickToggle(true);
 		
 		function clickToggle(init){
 			const show = init ? false : window['showOkcpFilters'];
@@ -403,6 +401,9 @@ _OKCP.loadHoverOptions = function() {
 			show ? $($filterWrapper).hide() : $($filterWrapper).show();
 			$($showFiltersBtn).show();
 		}
+
+
+		setInterval(()=>_OKCP.updateLocationsEl($filterWrapper), 2000);
 
 	}
 
@@ -424,25 +425,16 @@ _OKCP.loadHoverOptions = function() {
 
 
 _OKCP.updateLocationsEl = function($filterWrapper){
-	console.log({$filterWrapper});
 	const previousLocs = [...window.domLocations]
 	window.domLocations = getDomLocations();
-	// $($filterWrapper).find('.location-filters').remove();
-	
-	if (!$($filterWrapper).find('.location-filters').length) {
-		console.log('remove');
-		const $locWrapper = $(`<div class="location-filters"><h3>Locations</h3></div>`);
-		$($filterWrapper).append($locWrapper);
-	}
-	// 
 	if (window.domLocations.length != previousLocs.length) {
-		localStorage['showOkcpFiltersToggle Locations'] && _OKCP.populateLocationsEl(window.domLocations);
+		localStorage['showOkcpFilters'] && _OKCP.populateLocationsEl(window.domLocations);
 	}
 }
 
 _OKCP.populateLocationsEl = function(locations){
 	
-	const chosenLocations = getChosenLocations();
+	const chosenLocations = _OKCP.parseStorageObject('okcpChosenLocations');
 	const $wrapper = $('.location-filters');
 	$($wrapper).empty().append(`<h3>Locations</h3>`);
 	locations.forEach(location => {
@@ -455,26 +447,22 @@ _OKCP.populateLocationsEl = function(locations){
 		$wrapper.append(locEl)
 	})
 	$('[loc-attr]').click(function(){
-		const chosenLocations = getChosenLocations();
-		console.log('locattrclick', this);
 		const loc = $(this).attr("loc-attr");
 		const newVal = !chosenLocations[loc];
 		chosenLocations[loc] = newVal;
 		localStorage.okcpChosenLocations = JSON.stringify(chosenLocations);
 		$(loc).attr("checked", newVal);
-		existingNames = [];
-		purgeMismatches();
+		window.existingNames = [];
+		_OKCP.purgeMismatches();
 	})
-	
-	// _OKCP.setToggleBtn($wrapper, 'Toggle Locations');
 	
 	return $wrapper;
 }
 
-function purgeMismatches($card){
+_OKCP.purgeMismatches = function($card){
 	if (!$card) {
 		$(window.cardSelector).show();
-		return $(window.cardSelector).each(function(){purgeMismatches(this)})
+		return $(window.cardSelector).each(function(){_OKCP.purgeMismatches(this)})
 	}
 	hideCats($card);
 	if (getHideWeakBool()) {
@@ -483,30 +471,23 @@ function purgeMismatches($card){
 			return $($card).hide();
 		}
 	}
-	try {
-		console.log('could find location', e);
-		
-	} catch (e) {
-		return $($card).show()
+	
+	const locations = _OKCP.parseStorageObject('okcpChosenLocations');
+	const loc = $($card).find('.userInfo-meta-location')[0].innerHTML.split(', ')[1];
+	if (!(locations[loc] || locations['ALL'])) return $($card).hide();
+	
+	function hideCats($card){
+		if (getShowAllBool()) return;
+		const requiredCategories = getRequiredCats();
+		$($card).find(`.match-ratio-category`).each(function(){
+			const domName = this.innerHTML;
+			const missingFields = !requiredCategories.some(cat => 
+				spaces(domName).includes(spaces(cat)) || spaces(cat).includes(spaces(domName))
+			)
+			missingFields ? $(this).parent().hide() : $(this).parent().show();
+		})
 	}
 	
-	const locations = getChosenLocations();
-	const loc = $($card).find('.userInfo-meta-location')[0].innerHTML.split(', ')[1];
-	return (locations[loc] || locations['ALL']) ? $($card).show() : $($card).hide();
-}
-
-function hideCats($card){
-	if (getShowAllBool()) return;
-	if (!$card) return $(window.cardSelector).each(function(){hideCats(this)})
-	
-	const requiredCategories = getRequiredCats();
-	$($card).find(`.match-ratio-category`).each(function(){
-		const domName = this.innerHTML;
-		const missingFields = !requiredCategories.some(cat => 
-			spaces(domName).includes(spaces(cat)) || spaces(cat).includes(spaces(domName))
-		)
-		missingFields ? $(this).parent().hide() : $(this).parent().show();
-	})
 }
 
 function getDomLocations(){
@@ -519,11 +500,10 @@ function getDomLocations(){
 }
 
 function getRequiredCats(){
-	const chosenCats = getChosenCats();
+	const chosenCats = _OKCP.parseStorageObject('okcpChosenCategories');
 	return Object.keys(chosenCats).filter(key => chosenCats[key])
 }
 function getShowAllBool(){return (localStorage.displayAllCategories == "false" ? false : true)}
 function getHideWeakBool(){return (localStorage.hideWeakParticipants == "false" ? false : true)}
-function getChosenLocations(){return JSON.parse(localStorage.okcpChosenLocations || "{}") || {}}
-function getChosenCats(){return JSON.parse(localStorage.okcpChosenCategories || "{}") || {}}
+_OKCP.parseStorageObject = (key) => JSON.parse(localStorage[key] || "{}") || {};
 function spaces(str){ return str.replace(/(\-|_)/g, ' ') }

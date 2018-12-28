@@ -187,7 +187,8 @@ window.Product = Product;
 	}
 
 	if (_OKCP.devmode) _OKCP.initDevMode();
-
+	_OKCP.loadHoverOptions();
+	
 	// Questions Pages
 	if (onPageQuestions)
 		_OKCP.initSuggestQuestionsFeature(); // question suggestion feature
