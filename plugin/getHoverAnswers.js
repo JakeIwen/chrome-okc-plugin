@@ -324,31 +324,31 @@ _OKCP.getUserName = function($card){
 		return $($card).find('[data-username]').attr('data-username');
 }
 
+_OKCP.createStorageControl = function(storageKey, label, containerSelector, className){
+	var $head = $(containerSelector)
+	var isChecked = !(localStorage[storageKey] === "false")
+	var $wrapper = $(`<div class="${className}"> ${label}</div>`)
+	var $checkbox = $(`<input type="checkbox" ${isChecked && 'checked'} />`)
+	$checkbox.click(function(){ 
+		var newVal = localStorage[storageKey] === "false";
+		$(this).checked = newVal;
+		console.log(newVal);
+		localStorage[storageKey] = newVal;
+		console.log('removing', $('.match-ratios-wrapper-outer-hover'));
+		
+		$('.match-ratios-wrapper-outer-hover').remove();
+		existingNames = [];
+		// updateCards();
+		// purgeMismatches();
+	})
+	$wrapper.appendTo($head)
+	$checkbox.appendTo($wrapper);
+}
+
 _OKCP.loadHoverOptions = function(updateCards) {
 	setInterval(updateCards, 1000);
 	
   setTimeout(setFilters, 1000)
-
-	function createStorageControl(storageKey, label, containerSelector, className){
-		var $head = $(containerSelector)
-		var isChecked = !(localStorage[storageKey] === "false")
-		var $wrapper = $(`<div class="${className}"> ${label}</div>`)
-		var $checkbox = $(`<input type="checkbox" ${isChecked && 'checked'} />`)
-		$checkbox.click(function(){ 
-			var newVal = localStorage[storageKey] === "false";
-			$(this).checked = newVal;
-			console.log(newVal);
-			localStorage[storageKey] = newVal;
-			console.log('removing', $('.match-ratios-wrapper-outer-hover'));
-			
-			$('.match-ratios-wrapper-outer-hover').remove();
-			existingNames = [];
-			updateCards();
-			purgeMismatches();
-		})
-		$wrapper.appendTo($head)
-		$checkbox.appendTo($wrapper);
-	}
 
 	function setFilters(){
 		const chosenCats = getChosenCats();
@@ -356,8 +356,8 @@ _OKCP.loadHoverOptions = function(updateCards) {
 		const $filterWrapper = $(`<div class="custom-filter-wrapper"></div>`)
 		const $filters = $(`<div class="category-filters"></div>`)
 		
-		createStorageControl('displayAllCategories', 'Show All Categories', $filterWrapper, 'show-all')
-		createStorageControl('hideWeakParticipants', 'HideWeakParticipants', $filterWrapper, 'hide-weak')
+		_OKCP.createStorageControl('displayAllCategories', 'Show All Categories', $filterWrapper, 'show-all')
+		_OKCP.createStorageControl('hideWeakParticipants', 'HideWeakParticipants', $filterWrapper, 'hide-weak')
 
 		setInterval(()=>updateLocationsEl($filterWrapper), 1000);
 		setMainResetBtn($filterWrapper);
@@ -378,7 +378,8 @@ _OKCP.loadHoverOptions = function(updateCards) {
 				$(cat).attr("checked", newVal);
 				$('.match-ratios-wrapper-outer-hover').remove();
 				existingNames = [];
-				updateCards();
+				// updateCards();
+				//// TODO: fix updatecrds
 				purgeMismatches();
 			})
 		})

@@ -172,7 +172,7 @@ window.Product = Product;
 	window.onLikes = window.location.pathname=='/who-you-like';
 	
 	try {
-		window.answers = JSON.parse(_OKCP.lz().decompress(localStorage.getItem('answers'), {inputEncoding: "StorageBinaryString"}));
+			window.answers = JSON.parse(_OKCP.lz().decompress(localStorage.getItem('answers'), {inputEncoding: "StorageBinaryString"}));
 	} catch (e) {
 		window.answers = JSON.parse(localStorage.getItem('answers') || "{}");
 		console.log('get uncompressed answers');
@@ -223,17 +223,17 @@ window.Product = Product;
 		const settings = localStorage.okcpSettings;
 		console.log('at', window.ACCESS_TOKEN);
 		const tokenIsOld = (Date.now()-(localStorage.okcpTokenLastUpdated || 0)) > 60*60*2.75*1000;
-		window.ACCESS_TOKEN = "1,0,1541391361,0xaef578099279c6;edecbde81f805dba399354d8a452a781fa7e64af";
-		// if(true || tokenIsOld || !window.ACCESS_TOKEN) {
-		// 	window.OkC.getNewAccessToken().then(tokenres => {
-		// 		console.log('getting new token', tokenres);
-		// 
-		// 		settings.ACCESS_TOKEN = tokenres.authcode;
-		// 		window.ACCESS_TOKEN = tokenres.authcode;
-		// 		console.log('at', window.ACCESS_TOKEN);
-		// 		localStorage.okcpTokenLastUpdated = Date.now();
-		// 	});
-		// }
+			// window.ACCESS_TOKEN = "1,0,1541391361,0xaef578099279c6;edecbde81f805dba399354d8a452a781fa7e64af";
+		if(true || tokenIsOld || !window.ACCESS_TOKEN) {
+			window.OkC.getNewAccessToken().then(tokenres => {
+				console.log('getting new token', tokenres);
+		
+				settings.ACCESS_TOKEN = tokenres.authcode;
+				window.ACCESS_TOKEN = tokenres.authcode;
+				console.log('at', window.ACCESS_TOKEN);
+				localStorage.okcpTokenLastUpdated = Date.now();
+			});
+		}
 	}
 	
 });

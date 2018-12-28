@@ -95,16 +95,20 @@
   top: 20px;
   right: -20px;
 }
+/* 
+[class^=userthumb-]{
+  height: 110px;
+  width: 110px;
+} */
+
 
 .mock-link{
   top: 0px;
-  height: 120px;
-  width: 120px;
+  height: 60px;
+  width: 60px;
   position: absolute;
   z-index: 5;
-  /* bottom: 5px; */
   left: 0px;
-  /* right: 5px; */
 }
 .show-all{
   /* right: 250px;  */
