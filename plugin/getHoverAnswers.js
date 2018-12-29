@@ -348,7 +348,7 @@ _OKCP.createStorageControl = function(storageKey, label, containerSelector, clas
 _OKCP.loadHoverOptions = function() {
 	window.existingNames = [];
 	setInterval(_OKCP.updateCards, 1000);
-	
+	return
   setTimeout(setFilters, 1000)
 	
 	function setFilters(){

@@ -187,7 +187,6 @@ window.Product = Product;
 	}
 
 	if (_OKCP.devmode) _OKCP.initDevMode();
-	_OKCP.loadHoverOptions();
 	
 	// Questions Pages
 	if (onPageQuestions)

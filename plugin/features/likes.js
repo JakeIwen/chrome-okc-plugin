@@ -1,9 +1,10 @@
 
 _OKCP.likes = function() {
+  _OKCP.loadHoverOptions();
   window.cardSelector = '.userrow'
   const primarySortSelector = '.match-info-percentage'
   const secondarySortSelector = '.userInfo-username'
-  window.existingNames = [];
+  existingNames = [];
   const reverseSort = false;
 
   function diff(arr1=[], arr2=[]) {
@@ -83,9 +84,9 @@ _OKCP.updateCards = function(){
   let newNames = [];
   $(els).each(function(){
     const thisName = _OKCP.getUserName(this);
-    if (!window.existingNames.includes(thisName)) newNames.push(thisName);
+    if (!existingNames.includes(thisName)) newNames.push(thisName);
   })
-  window.existingNames = window.existingNames.concat(newNames);
+  existingNames = existingNames.concat(newNames);
   if (newNames.length) {
     console.log('updating for ', newNames.length, 'cards');
     var sorted = sort 
