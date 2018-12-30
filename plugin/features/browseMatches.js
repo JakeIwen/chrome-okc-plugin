@@ -29,7 +29,7 @@ _OKCP.browseMatches = function() {
   
   var ivl = setInterval(() => {
     localStorage.okcpAutoscroll === "true" && scrollIfReady();
-  }, 1500);
+  }, 750);
   $(hideLikedBtn).click(()=>{
     console.log('click');
     $(`.match-info-liked.okicon.i-star`)
@@ -38,8 +38,8 @@ _OKCP.browseMatches = function() {
   let show = false; 
   
   $(evalBtn).click(() => {
+    $("match-ratios-wrapper-outer-hover").remove();
     $('#showEl').children().each(function(){
-      $(this).find("match-ratios-wrapper-outer-hover").remove();
       _OKCP.getHoverAnswers(this);
     })
   })
@@ -77,7 +77,6 @@ _OKCP.browseMatches = function() {
     $(`${window.cardSelector}:not([added]):visible > :not(.usercard-placeholder)`).parent().each(function(){_OKCP.getHoverAnswers(this, 'browse')})
     const cardNum = $(window.cardSelector).length
     const passNum = $("button[name='pass']:visible").length
-    console.log({cardNum, passNum});
     if (cardNum > passNum) setPasses();
     else !$('#showEl').length && scrollIfReady();
     
@@ -136,6 +135,7 @@ _OKCP.browseMatches = function() {
       const newId = 'usr' + _OKCP.getUserName(this)
       const likedByYou = $(this).find('.match-info-liked.okicon.i-star').length;
       if (removeLiked && likedByYou) return $(this).remove();
+      console.log('setp');
       if(!showMode && $('#'+newId+' .match-ratio-category:visible').length){
         console.log('IN');
         if(!cardIds.includes(newId)){
