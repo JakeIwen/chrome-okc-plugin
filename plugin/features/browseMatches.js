@@ -7,56 +7,45 @@ _OKCP.browseMatches = function() {
   const $resetBtnTemplate = $(`<button name="reset" style=transform:scale(0.7) class="btn-ctr"><span class="rating_reset">Reset</span></button>`)
   const $passBtnTemplate = $(`<button name="pass" style=transform:scale(0.7) class="btn-ctr"><span class="rating_like">Pass</span></button>`)
   
-  const removeLiked = false;
-  const cards = [] 
-  const cardIds = []
-  if(localStorage.okcpUseShowCards) {
-    $(localStorage.okcpShowCards).each(function(){
-      cards.push(this);
-      cardIds.push( $(this).attr('id') )
-    })
-  };
-  console.log({cards});
-  localStorage.removeItem('okcpShowCards');
-  
-  const cardList = [];
-  _OKCP.createStorageControl('okcpAutoscroll', 'Autoscroll matches', 'body', 'auto-scroll', true)
-
   const showBtn = $("<button>Show</button> ")
   const evalBtn = $("<button>Eval</button> ")
   const hideLikedBtn = $("<button>Hide Liked</button> ")
   
+  const removeLiked = false;
+  let show = false;
+  const allCards = $(localStorage['okcpShowCards'] || ''); 
+  const cards = [];
+  debugger;
   
-  var ivl = setInterval(() => {
-    localStorage.okcpAutoscroll === "true" && scrollIfReady();
-  }, 750);
-  $(hideLikedBtn).click(()=>{
-    console.log('click');
-    $(`.match-info-liked.okicon.i-star`)
-      .closest(`.match-results-card`).hide()
-  });
-  let show = false; 
+  const cardIds = []
+  setInterval(()=>console.log({cards}), 3000)
+  var passIvl = setPassIvl();
+  
+  _OKCP.createStorageControl('okcpAutoscroll', 'Autoscroll matches', 'body', 'auto-scroll', true)
+  var ivl = setInterval(() => localStorage.okcpAutoscroll==="true" && scrollIfReady(), 1000);
+  
+  $(hideLikedBtn).click(() =>
+    $(`.match-info-liked.okicon.i-star`).closest(`.match-results-card`).hide()
+  );
   
   $(evalBtn).click(() => {
     $("match-ratios-wrapper-outer-hover").remove();
-    $('#showEl').children().each(function(){
-      _OKCP.getHoverAnswers(this);
-    })
+    $('#showEl').children().each(function(){_OKCP.getHoverAnswers(this)})
   })
-  $(showBtn).click(()=>{
+  
+  $(showBtn).click(() => {
     show = !show;
-    console.log({cards});
+    
     if(!show) {
-      $('#showEl').remove();
+      $('.button-ctr, #showEl').remove();
       $('#main_content').show();
-      
-      ivl = setInterval(() => {
-        localStorage.okcpAutoscroll === "true" && scrollIfReady();
-      }, 2000);
+      ivl = setInterval(() => localStorage.okcpAutoscroll === "true" && scrollIfReady(), 1000);
+      passIvl = setPassIvl();
       return;
     }
     
     clearInterval(ivl);
+    clearInterval(passIvl);
     const showEl = $('<div id="showEl" style="background-color: #FFFFFF; position: absolute; margin: 50px; padding-top: 50px; overflow-y: scroll; top: 0; z-index: 1000"></div>');
     $('#main_content').hide();
     $('body').append(showEl)
@@ -71,26 +60,30 @@ _OKCP.browseMatches = function() {
     setTimeout(()=>setPasses(true), 3000)
     
   })
+  
   $('body').prepend(evalBtn, showBtn, hideLikedBtn);
   
-  setInterval(()=>{
-    $(`${window.cardSelector}:not([added]):visible > :not(.usercard-placeholder)`).parent().each(function(){_OKCP.getHoverAnswers(this, 'browse')})
-    const cardNum = $(window.cardSelector).length
-    const passNum = $("button[name='pass']:visible").length
-    if (cardNum > passNum) setPasses();
-    else !$('#showEl').length && scrollIfReady();
-    
-  }, 1000);
+  function setPassIvl(){
+    return setInterval(()=>{
+      $(`${window.cardSelector}:not([added]):visible > :not(.usercard-placeholder)`).parent().each(function(){_OKCP.getHoverAnswers(this, 'browse')})
+      const cardNum = $(window.cardSelector).length
+      const passNum = $("button[name='pass']:visible").length
+      if (cardNum > passNum) setPasses();
+      else !$('#showEl').length && scrollIfReady();
+    }, 1000);
+  }
+
   
   function scrollIfReady() {
     if ($('.usercard-placeholder').length) return;
     
     if($('.match-results-error').length) {
       var showHtml = '';
-      cards.forEach(card => showHtml += $('<div>').append($(card)).html());
+      cards.forEach(card => showHtml += $(`<div></div>`).append($($(card)).html()));
       console.log({showHtml});
       localStorage.okcpShowCards = showHtml;
-      location.reload()
+      debugger;
+      // location.reload()
       return;
     }
     

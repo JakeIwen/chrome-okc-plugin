@@ -492,9 +492,7 @@ _OKCP.purgeMismatches = function($card){
 function getDomLocations(){
 	const locations = $.map($('.userInfo-meta-location'), el => el.innerHTML.split(', ')[1])
 	//sort by frequency
-	const aCount = new Map([...new Set(locations)]
-		.map(x => [x, locations.filter(y => y === x).length])
-	);
+	const aCount = new Map([...new Set(locations)].map(x => [x, locations.filter(y => y === x).length]));
 	return [...new Set(locations.sort( (a,b) => aCount.get(b) - aCount.get(a) )), 'ALL'];
 }
 
