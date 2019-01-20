@@ -173,6 +173,7 @@ _OKCP.getHoverAnswers = function ($card) {
 		for (var i = 0; i < 25; i++) {
 			url = "//www.okcupid.com/profile/" + name.replace(/^usr/, '') + "/questions?n=2&low=" + (questionPageNum*10+1) + "&leanmode=1";
 			if (i==9) console.log('got ', questionPageNum, ' pages for', name)
+			console.log('loading page hover', url);
 			if (!requestFailed && (numRequestsMade < numQuestionPages)) {
 				questionPageNum++;
 				numRequestsMade++;
@@ -468,7 +469,7 @@ _OKCP.purgeMismatches = function($card){
 		const $visCats = $($card).find('.match-ratios-list-hover');
 		if (!$($visCats).children(':visible').not('.not-a-match').length) {
 			return $($card).hide();
-		}
+		} 
 	}
 	
 	const locations = _OKCP.parseStorageObject('okcpChosenLocations');

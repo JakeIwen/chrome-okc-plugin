@@ -13,9 +13,7 @@ _OKCP.browseMatches = function() {
   
   const removeLiked = false;
   let show = false;
-  const allCards = $(localStorage['okcpShowCards'] || ''); 
   const cards = [];
-  debugger;
   
   const cardIds = []
   setInterval(()=>console.log({cards}), 3000)
@@ -78,12 +76,9 @@ _OKCP.browseMatches = function() {
     if ($('.usercard-placeholder').length) return;
     
     if($('.match-results-error').length) {
-      var showHtml = '';
-      cards.forEach(card => showHtml += $(`<div></div>`).append($($(card)).html()));
-      console.log({showHtml});
-      localStorage.okcpShowCards = showHtml;
       debugger;
       // location.reload()
+      //change to sort by match percent or something to keep it rolling
       return;
     }
     
@@ -128,8 +123,7 @@ _OKCP.browseMatches = function() {
       const newId = 'usr' + _OKCP.getUserName(this)
       const likedByYou = $(this).find('.match-info-liked.okicon.i-star').length;
       if (removeLiked && likedByYou) return $(this).remove();
-      console.log('setp');
-      if(!showMode && $('#'+newId+' .match-ratio-category:visible').length){
+      if(!showMode && $('#'+newId+' .match-ratio:visible').length){
         console.log('IN');
         if(!cardIds.includes(newId)){
           console.log('adding card');

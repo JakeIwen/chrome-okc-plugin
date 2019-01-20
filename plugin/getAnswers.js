@@ -34,6 +34,7 @@ _OKCP.getAnswers = function (list) {
 	}
 
 	function loadData(response, status) {
+		debugger;
 		if ( status === "error" ) {
 			numRequestsFinished++;
 			console.log("Request failed on number " + numRequestsMade);
@@ -122,94 +123,49 @@ _OKCP.getAnswers = function (list) {
 	}
 
 	function loadProfileAnswers() {
-		if (location.href.split('/profile/')[1] === undefined) return false;
-		//loop through every question page
-		var pageResultsDiv = $('<div id="page-results"></div>').appendTo('body');
-		$('#footer').append('<a class="page-results-link" href="#page-results">Show question results</a>');
+		
+		initRequests()
+		// oldLoad();
+		function initRequests(){
+			var name = 'usr' + window.location.href.split('/profile/')[1].split('/')[0]
+			
+			pageResultsDiv = $('<div class="page-results '+name+'"></div>')
 
-		while (!requestFailed && numRequestsMade < _OKCP.numQuestionPages) {
-			updateQuestionPath();
-			// console.log('loading page '+ questionPath);
-			numRequestsMade++;
-
-			if (_OKCP.questionFetchingMethod === "original") {
-				/*//on the first page load, get meta info (number of questions in common)
-				if (questionPageNum === 1) {
-					$('<div id="page-results-meta"></div>').appendTo(pageResultsDiv).load(questionPath + ' .stats.lined', function() {
-						var questionsInCommon = $('.comparison>p:first-child').text().split(' of ')[0];//$(this).find('.stats.lined li:nth-child(5) .large').text().split(' questions')[0];
-						var questionsInCommonAmountClass = "";
-						if (questionsInCommon > 100) {
-							questionsInCommonAmountClass = 'questions-in-common-many';
-						} else if (questionsInCommon < 34) {
-							questionsInCommonAmountClass = 'questions-in-common-few';
-						}
-						console.log(questionsInCommon);
-						$('.questions-in-common').addClass(questionsInCommonAmountClass).prepend(questionsInCommon + ' Common Questions');
-					});
-				}
-
-				//add page results, parse the page
-				$('<div id="page-results-' + questionPageNum + '"></div>').appendTo(pageResultsDiv).load(questionPath + ' #questions', function() {
-					numRequestsFinished++;
-					// console.log(this);
-					for (var i = 0; i < list.length; i++) {
-						var theirAnswer, theirNote, yourAnswer, yourNote;
-						var listItem = list[i];
-						var num = listItem.qid;
-						var wrongAnswers = listItem.wrongAnswers;
-						if ($("#question_" + num + ".public").length === 0) continue;
-						// if ($('#question_' + num + '.public').length === 0) {console.log("passing "+num);continue;}
-						var questionText = $(this).find("#qtext_"+num).text().trim();
-						if (questionText === "") continue;
-
-						if (_OKCP.onOwnProfile) {
-							theirAnswer = $(this).find("#self_answers_"+num+" .match.mine").text().trim();
-							theirNote = $(this).find("#explanation_"+num).text().trim();
-						} else {
-							theirAnswer = $(this).find("#answer_target_"+num).text().trim();
-							theirNote = $(this).find("#note_target_"+num).text().trim();
-							yourAnswer = $(this).find("#answer_viewer_"+num).text().trim();
-							yourNote = $(this).find("#note_viewer_"+num).text().trim();
-						}
-						var match = true;
-						for (var j = 0; j < wrongAnswers.length; j++) {
-							// console.log(questionText + "  " + theirAnswer + " | " + wrongAnswers[j]);
-							if (wrongAnswers[j] === theirAnswer) match = false;
-						}
-
-						if (!responseCount[listItem.category]) { //ensure there's an entry for the category count
-							responseCount[listItem.category] = [0,0];
-						}
-						if (match) {
-							responseCount[listItem.category][0]++;
-						}
-						responseCount[listItem.category][1]++;
-						questionList.push({
-							question: questionText,
-							qid: num,
-							theirAnswer: theirAnswer,
-							theirNote: theirNote,
-							yourAnswer: yourAnswer,
-							yourNote: yourNote,
-							match: match,
-							category: listItem.category
-						});
-						listItem.qid = listItem.qid+"-used";
-					}
-					// console.log(questionList);
-					areWeDone(false);
-				}).error(function(){
-					console.log("Request failed on number " + numRequestsMade);
-					requestFailed = true;
-				});*/
-			} else if (_OKCP.questionFetchingMethod === "mobile_app") {
-				//TODO: on the first page load, get meta info (number of questions in common)
-
-
-				//add page results, parse the page
+			$.get(`https://www.okcupid.com/profile/${name.replace(/^usr/, '')}/questions`, data => {
+				numQuestionPages = parseInt($(data).find('a.last').text()) || 20;
+				console.log(`name: ${name}, numpages: ${numQuestionPages}`);
+				nextRequest();
+			})
+		}
+		
+		function nextRequest(){
+			for (var i = 0; i < 25; i++) {
+				url = "//www.okcupid.com/profile/" + name.replace(/^usr/, '') + "/questions?n=2&low=" + (questionPageNum*10+1) + "&leanmode=1";
+				if (i==9) console.log('got ', questionPageNum, ' pages for', name)
+				console.log('loading page hover', url);
+				// if (!requestFailed && (numRequestsMade < numQuestionPages)) {
+					questionPageNum++;
+					// numRequestsMade++;
+					$('<div class="page-results-' + questionPageNum + ' page-results-' + name + '"></div>')
+						.appendTo(pageResultsDiv)
+						.load(url, (response, status, xhr)=>loadData(response, status, xhr));
+				// }
+			}
+		}
+		function oldLoad(){
+			if (location.href.split('/profile/')[1] === undefined) return false;
+			//loop through every question page
+			var pageResultsDiv = $('<div id="page-results"></div>').appendTo('body');
+			$('#footer').append('<a class="page-results-link" href="#page-results">Show question results</a>');
+			
+			while (!requestFailed && numRequestsMade < _OKCP.numQuestionPages) {
+				updateQuestionPath();
+				console.log('loading page getanswers ',  {questionPath});
+				numRequestsMade++;
+			
 				$('<div id="page-results-' + questionPageNum + '"></div>')
 					.appendTo(pageResultsDiv)
-					.load(questionPath, loadData);
+					.load(questionPath, (response, status, xhr)=>loadData(response, status, xhr));
 			}
 		}
 	}
@@ -221,7 +177,7 @@ _OKCP.getAnswers = function (list) {
 				questionFilterParameter = 'very_important=1';
 			}
 			questionPageNum = pageNum || questionPageNum;
-			questionPath = "//www.okcupid.com/profile/" + _OKCP.profileName + "/questions?n=2&low=" + (questionPageNum*10+1) + "&" + questionFilterParameter;
+			questionPath = "//www.okcupid.com/profile/" + _OKCP.profileName + "/questions?n=2&low=" + (questionPageNum*10+1);
 			if (_OKCP.questionFetchingMethod === "mobile_app") questionPath += '&leanmode=1';
 			questionPageNum++;
 		}
