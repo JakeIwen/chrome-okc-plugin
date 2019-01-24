@@ -16,27 +16,15 @@ _OKCP.getAnswers = function (list) {
 		return false;
 	} else {
 		
-
-
 	// get list of questions and categories to compare to
 	if (list === undefined) {
 		list = localStorage.okcpDefaultQuestions ? JSON.parse(localStorage.okcpDefaultQuestions).questionsList : {};
 	}
 
-	// check for cached question data
-	// if (!!recentProfiles[_OKCP.profileName] && _OKCP.cacheEnabled && new Date().getTime() - recentProfiles[_OKCP.profileName].expires < 0) {
-	// 	// console.log('cached');
-	// 	recentProfiles[_OKCP.profileName].expires = new Date().getTime() + 300000; //reset expires
-	// 	questionList = recentProfiles[_OKCP.profileName].questionList;
-	// 	responseCount = recentProfiles[_OKCP.profileName].responseCount;
-	// 	areWeDone(true);
-	// } else {
-		// console.log('not cached');
-		loadProfileAnswers();
-	// }
+	loadProfileAnswers();
 
 	function loadData(answer) {
-		const {target, viewer, question} = answer
+		var {target, viewer, question} = answer
 		for (var category in list) {
 			var categoryQuestionList = list[category];
 			
@@ -46,7 +34,7 @@ _OKCP.getAnswers = function (list) {
 				if(parseInt(listItem.qid) !== question.id) continue;
 				
 				var theirAnswerIndex, answerScore, answerWeight, answerScoreWeighted;
-				const theirAnswer = question.answers[target.answer];
+				var theirAnswer = question.answers[target.answer];
 				var possibleAnswers = listItem.answerText;
 
 				for (var j = 0; j < possibleAnswers.length; j++) {

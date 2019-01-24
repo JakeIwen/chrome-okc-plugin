@@ -1,6 +1,6 @@
 _OKCP.getHoverAnswers = function ($card) {
-	const requiredCategories = getRequiredCats();
-	const hideWeak = getHideWeakBool()
+	var requiredCategories = getRequiredCats();
+	var hideWeak = getHideWeakBool()
 	
 	var list = localStorage.okcpDefaultQuestions 
 		? JSON.parse(localStorage.okcpDefaultQuestions).questionsList 
@@ -34,74 +34,35 @@ _OKCP.getHoverAnswers = function ($card) {
 	let finished = false;
 	let questionPageNum = 0; //for iterating over question pages
 	let questionPath; //for storing the path of the question page as we iterate
-	let requestFailed = false;
-	let pageResultsDiv;
 
-	initRequests();
-
-	function loadData(response, status, xhr) {
-		numRequestsFinished++;
-		console.log('len', response.length);
-		debugger;
-		if ( status === "error" ) {
-			console.log("Request failed on number " + numRequestsMade);
-			
-			requestFailed = true;
-			
-			debugger;
-			return false;
-		}
-		
-		if (!(response.length > 1000)) {
-			failed++;
-			console.log('short response', {response, xhr});
-		}
-		
-		setTimeout(()=>parseCombinedPages(pageResultsDiv), 500)
-		if (!finished && (numRequestsFinished >= Math.min(numQuestionPages, numRequestsMade))) {
-			if (numRequestsFinished >= numQuestionPages){
-				finished = true;
-				parseCombinedPages(pageResultsDiv);
-				areWeDone();
-				saveAnswers();
-			} else{
-				nextRequest();
-			} 
-		}
-		
+	init();
+	
+	async function init(){
+		var userName = _OKCP.getUserName($card);
+		var userId = await _OKCP.getUserId(userName)
+		var apiAnswers = await _OKCP.getApiAnswers(userId);
+		apiAnswers.forEach(answerObj => loadData(answerObj))
+		console.log({questionList, responseCount});
+		areWeDone(false);
+		saveAnswers();
 	}
 	
-	function loadData(answer){
-		debugger;
-
+	function loadData(answer) {
+		var {target, viewer, question} = answer
 		for (var category in list) {
 			var categoryQuestionList = list[category];
+			
 			for (var i = 0; i < categoryQuestionList.length; i++) {
 				var listItem = categoryQuestionList[i];
-				var theirAnswer, theirAnswerIndex, theirNote, yourAnswer, yourNote, answerScore, answerWeight, answerScoreWeighted;
-				var num = listItem.qid;
+				
+				if(parseInt(listItem.qid) !== question.id) continue;
+				
+				var theirAnswerIndex, answerScore, answerWeight, answerScoreWeighted;
+				var theirAnswer = question.answers[target.answer];
 				var possibleAnswers = listItem.answerText;
-				console.log('lit', listItem.text);
-				console.log($(pageResultsDiv));
-				debugger;
-				var questionElem = listItem.text ? $(pageResultsDiv).find(`.profile-question-text:contains(${listItem.text})`).closest('.profile-question'): [];
-				if (questionElem.length === 0) continue;
-				var questionText = questionElem.find('.profile-question-text').text().trim();
-				if(questionElem.length) debugger;
-				
-				if (questionText === "") continue;
-				
-				var alreadyExists = questionList.find(q => q.qid==num)
-				if (alreadyExists) continue;
-			
-				theirAnswer = questionElem.find("#answer_target_"+num).text().trim();
-				if (theirAnswer === '') continue; //if the answer elem doesn't exist, continue
-				theirNote   = questionElem.find("#note_target_"+num).text().trim();
-				yourAnswer  = questionElem.find("#answer_viewer_"+num).text().trim();
-				yourNote    = questionElem.find("#note_viewer_"+num).text().trim();
-				
+
 				for (var j = 0; j < possibleAnswers.length; j++) {
-					if (possibleAnswers[j].replace('.', '') === theirAnswer.replace('.', '')) {
+					if (possibleAnswers[j] === theirAnswer) {
 						theirAnswerIndex = j;
 						break;
 					}
@@ -110,24 +71,24 @@ _OKCP.getHoverAnswers = function ($card) {
 				answerWeight = listItem.weight ? listItem.weight[theirAnswerIndex] || 0 : 1;
 				if (answerWeight === 0) continue;
 				answerScoreWeighted = ((answerScore+1) / 2) * answerWeight;
+
 				//ensure there's an entry for the category count
 				if (!responseCount[category]) responseCount[category] = [0,0];
 
 				responseCount[category][0] += answerScoreWeighted;
 				responseCount[category][1] += answerWeight;
-				
+
 				questionList.push({
-					question: questionText,
-					qid: num,
+					question: question.text,
+					qid: String(question.id),
 					theirAnswer: theirAnswer,
-					theirNote: theirNote,
-					yourAnswer: yourAnswer,
-					yourNote: yourNote,
+					theirNote: (target.note || {}).note ||'',
+					yourAnswer: question.answers[viewer.answer],
+					yourNote: (viewer.note || {}).note ||'',
 					answerScore: answerScore,
 					answerWeight: answerWeight,
 					answerScoreWeighted: answerScoreWeighted,
 					category: category,
-					name: name,
 					categoryReadable: category.split('_').join(' ')
 				});
 				listItem.qid = listItem.qid+"-used";
@@ -135,31 +96,6 @@ _OKCP.getHoverAnswers = function ($card) {
 		}
 	}
 	
-	async function initRequests(){
-		const userName = _OKCP.getUserName($card);
-    const userId = await _OKCP.getUserId(userName)
-		var userId = window.location.href.split('/profile/')[1].split('?')[0]
-		var apiAnswers = await _OKCP.getApiAnswers(userId);
-		apiAnswers.forEach(answerObj => loadData(answerObj))
-		console.log({questionList, responseCount});
-		areWeDone(false);
-	}
-	
-	function nextRequest(){
-		for (var i = 0; i < 1; i++) {
-			url = `https://www.okcupid.com/profile/8112665045524396488/questions?n=2&low=1&leanmode=1`;
-			if (i==9) console.log('got ', questionPageNum, ' pages for', name)
-			console.log('loading page hover', url);
-			if (!requestFailed && (numRequestsMade < numQuestionPages)) {
-				questionPageNum++;
-				numRequestsMade++;
-				$('<div class="page-results-' + questionPageNum + ' page-results-' + name + '"></div>')
-					.appendTo(pageResultsDiv)
-					.load(url, (response, status, xhr)=>loadData(response, status, xhr));
-			}
-		}
-	}
-
 	function areWeDone() {
 
 		$('.match-ratios-list-hover.'+name).html('');
@@ -191,7 +127,6 @@ _OKCP.getHoverAnswers = function ($card) {
 	function saveAnswers(){
 		$('.page-results-'+name).remove();
 		removeDupes();
-		if(requestFailed) return;
 		var html = ratioList[0].outerHTML;
 		
 		window.answers[name] = html;
@@ -205,38 +140,23 @@ _OKCP.getHoverAnswers = function ($card) {
 		_OKCP.purgeMismatches($card);
 			
 		saveQuestions();
-		// saveCard();
 		
 	}
-	
-	// function saveCard(){
-	// 	// window.cards = window.cards || [];
-	// 	// window.cards.push($card);
-	// 	if($($card).is(":visible")){
-	// 		console.log('binding');
-	// 		$($card).bind('destroyed', function() {
-	// 			console.log('dest', this)
-	// 			$('.page-main').prepend($(this))
-	// 		  // do stuff
-	// 		})
-	// 	}
-	// 
-	// 
-	// }
+
 	 
 	function saveQuestions(){
 		
-		const savedQuestions = JSON.parse(localStorage.getItem('savedQuestions') || "[]");
-		const questionTexts = savedQuestions.map( q => q.question.text )
-		const existingQuestions = _OKCP.fullQuestionsList.map(q => q.text).sort();
+		var savedQuestions = JSON.parse(localStorage.getItem('savedQuestions') || "[]");
+		var questionTexts = savedQuestions.map( q => q.question.text )
+		var existingQuestions = _OKCP.fullQuestionsList.map(q => q.text).sort();
 		console.log({existingQuestions});
 		window['pageQuestions'+name].forEach( (q, i) => {
-			const savedIdx = questionTexts.indexOf(q.text);
+			var savedIdx = questionTexts.indexOf(q.text);
 			if (savedIdx == -1) {
-				const question = q;
+				var question = q;
 				question.answerText = question.answerText.filter(a => a && (a!=="Answer publicly to see my answer"))
-				const exists = existingQuestions.includes(q.text);
-				const qObj = { exists, question, count: 0 };
+				var exists = existingQuestions.includes(q.text);
+				var qObj = { exists, question, count: 0 };
 				savedQuestions.push(qObj);
 			} else {
 				savedQuestions[savedIdx].count++;
@@ -252,9 +172,7 @@ _OKCP.getHoverAnswers = function ($card) {
 			.sort((a,b) => b.count-a.count)
 			.map(q => [q.count, q.question]);
 		
-		var ana = notExisting.filter(q => q[1].text.includes('anal ') || q[1].answerText.some(t => t.includes('anal ')));
-		var ora = notExisting.filter(q => q[1].text.includes('oral sex') || q[1].answerText.some(t => t.includes('oral sex')));
-		console.log({existing, notExisting, ana, ora});
+		// console.log({existing, notExisting});
 		
 	}
 	
@@ -283,7 +201,7 @@ _OKCP.getHoverAnswers = function ($card) {
 
 };
 _OKCP.saveCompressed = function(key, value){
-	const compressed = _OKCP.lz().compress(JSON.stringify(value), {outputEncoding: "StorageBinaryString"})
+	var compressed = _OKCP.lz().compress(JSON.stringify(value), {outputEncoding: "StorageBinaryString"})
 	localStorage.setItem(key, compressed);
 	console.log('saved');
 }
@@ -329,31 +247,31 @@ _OKCP.loadHoverOptions = function() {
 	
 	function setFilters(){
 		
-		const $catFilters = $(`<div class="category-filters"><h4>Categories</h4></div>`)
-		const $locWrapper = $(`<div class="location-filters"><h3>Locations</h3></div>`);
+		var $catFilters = $(`<div class="category-filters"><h4>Categories</h4></div>`)
+		var $locWrapper = $(`<div class="location-filters"><h3>Locations</h3></div>`);
 		
-		const controlDiv = $(`<div class="control-div"></div>`);
+		var controlDiv = $(`<div class="control-div"></div>`);
 		_OKCP.createStorageControl('displayAllCategories', 'Show All Categories', controlDiv, 'show-all')
 		_OKCP.createStorageControl('hideWeakParticipants', 'HideWeakParticipants', controlDiv, 'hide-weak')
 		setMainResetBtn(controlDiv);
 		
-		const $filterWrapper =  $(`<div class="custom-filter-wrapper"></div>`)
+		var $filterWrapper =  $(`<div class="custom-filter-wrapper"></div>`)
 															.append(controlDiv, $catFilters, $locWrapper)
 															.hide();
 		
 		$('body').append($filterWrapper);
 		
-		const questions = _OKCP.parseStorageObject('okcpDefaultQuestions').questionsList;
-		const chosenCats = _OKCP.parseStorageObject('okcpChosenCategories');
+		var questions = _OKCP.parseStorageObject('okcpDefaultQuestions').questionsList;
+		var chosenCats = _OKCP.parseStorageObject('okcpChosenCategories');
 		
 		Object.keys(questions).forEach(category => {
-			const shouldBeChecked = Boolean(chosenCats[category]);
-			const $wrapper = $(`<ul class="category-wrapper"></ul>`).appendTo($catFilters);
+			var shouldBeChecked = Boolean(chosenCats[category]);
+			var $wrapper = $(`<ul class="category-wrapper"></ul>`).appendTo($catFilters);
 			$wrapper.append(`<li>${category} <input type="checkbox" cat-attr="${category}" ${shouldBeChecked && 'checked'} /></li>`)
 			$($wrapper).click(function(){
 				console.log('wrapper', this);
-				const cat = $(this).find("[cat-attr]").attr("cat-attr");
-				const newVal = !chosenCats[cat];
+				var cat = $(this).find("[cat-attr]").attr("cat-attr");
+				var newVal = !chosenCats[cat];
 				chosenCats[cat] = newVal;
 				localStorage.okcpChosenCategories = JSON.stringify(chosenCats);
 				$(cat).attr("checked", newVal);
@@ -364,14 +282,14 @@ _OKCP.loadHoverOptions = function() {
 			})
 		})
 		
-		const aList = $(`#navigation > div.nav-left > ul > li:nth-child(3)`).empty();
-		const $showFiltersBtn = $(`<a><span class="text"> Custom Filters </span></a>`)
+		var aList = $(`#navigation > div.nav-left > ul > li:nth-child(3)`).empty();
+		var $showFiltersBtn = $(`<a><span class="text"> Custom Filters </span></a>`)
 		$(aList).prepend($showFiltersBtn);
 		$($showFiltersBtn).click(()=>clickToggle());
 		// clickToggle(true);
 		
 		function clickToggle(init){
-			const show = init ? false : window['showOkcpFilters'];
+			var show = init ? false : window['showOkcpFilters'];
 			window['showOkcpFilters'] = !show;
 			console.log(`window['showOkcpFilters'] `, window['showOkcpFilters'] );
 			show ? $($filterWrapper).hide() : $($filterWrapper).show();
@@ -384,7 +302,7 @@ _OKCP.loadHoverOptions = function() {
 	}
 
 	function setMainResetBtn($wrapper){
-		const $btn = $(`<button name="reset" class="binary_rating_button silver flatbutton reset-all-btn">
+		var $btn = $(`<button name="reset" class="binary_rating_button silver flatbutton reset-all-btn">
 				<span class="rating_like">Reset</span>
 			</button>`)
 		$($btn).click((event) => {
@@ -401,7 +319,7 @@ _OKCP.loadHoverOptions = function() {
 
 
 _OKCP.updateLocationsEl = function($filterWrapper){
-	const previousLocs = [...window.domLocations]
+	var previousLocs = [...window.domLocations]
 	window.domLocations = getDomLocations();
 	if (window.domLocations.length != previousLocs.length) {
 		localStorage['showOkcpFilters'] && _OKCP.populateLocationsEl(window.domLocations);
@@ -410,21 +328,21 @@ _OKCP.updateLocationsEl = function($filterWrapper){
 
 _OKCP.populateLocationsEl = function(locations){
 	
-	const chosenLocations = _OKCP.parseStorageObject('okcpChosenLocations');
-	const $wrapper = $('.location-filters');
+	var chosenLocations = _OKCP.parseStorageObject('okcpChosenLocations');
+	var $wrapper = $('.location-filters');
 	$($wrapper).empty().append(`<h3>Locations</h3>`);
 	locations.forEach(location => {
 		if (chosenLocations[location] === undefined) {
 			chosenLocations[location] = true;
 			localStorage.okcpChosenLocations = JSON.stringify(chosenLocations);
 		}
-		const shouldBeChecked = Boolean(chosenLocations[location]);
+		var shouldBeChecked = Boolean(chosenLocations[location]);
 		var locEl = $(`<div>${location} <input class="locattr" type="checkbox" loc-attr="${location}" ${shouldBeChecked && 'checked'} /></div>`);
 		$wrapper.append(locEl)
 	})
 	$('[loc-attr]').click(function(){
-		const loc = $(this).attr("loc-attr");
-		const newVal = !chosenLocations[loc];
+		var loc = $(this).attr("loc-attr");
+		var newVal = !chosenLocations[loc];
 		chosenLocations[loc] = newVal;
 		localStorage.okcpChosenLocations = JSON.stringify(chosenLocations);
 		$(loc).attr("checked", newVal);
@@ -442,22 +360,22 @@ _OKCP.purgeMismatches = function($card){
 	}
 	hideCats($card);
 	if (getHideWeakBool()) {
-		const $visCats = $($card).find('.match-ratios-list-hover');
+		var $visCats = $($card).find('.match-ratios-list-hover');
 		if (!$($visCats).children(':visible').not('.not-a-match').length) {
 			return $($card).hide();
 		} 
 	}
 	
-	const locations = _OKCP.parseStorageObject('okcpChosenLocations');
-	const loc = $($card).find('.userInfo-meta-location')[0].innerHTML.split(', ')[1];
+	var locations = _OKCP.parseStorageObject('okcpChosenLocations');
+	var loc = $($card).find('.userInfo-meta-location')[0].innerHTML.split(', ')[1];
 	if (!(locations[loc] || locations['ALL'])) return $($card).hide();
 	
 	function hideCats($card){
 		if (getShowAllBool()) return;
-		const requiredCategories = getRequiredCats();
+		var requiredCategories = getRequiredCats();
 		$($card).find(`.match-ratio-category`).each(function(){
-			const domName = this.innerHTML;
-			const missingFields = !requiredCategories.some(cat => 
+			var domName = this.innerHTML;
+			var missingFields = !requiredCategories.some(cat => 
 				spaces(domName).includes(spaces(cat)) || spaces(cat).includes(spaces(domName))
 			)
 			missingFields ? $(this).parent().hide() : $(this).parent().show();
@@ -467,35 +385,18 @@ _OKCP.purgeMismatches = function($card){
 }
 
 function getDomLocations(){
-	const locations = $.map($('.userInfo-meta-location'), el => el.innerHTML.split(', ')[1])
+	var locations = $.map($('.userInfo-meta-location'), el => el.innerHTML.split(', ')[1])
 	//sort by frequency
-	const aCount = new Map([...new Set(locations)].map(x => [x, locations.filter(y => y === x).length]));
+	var aCount = new Map([...new Set(locations)].map(x => [x, locations.filter(y => y === x).length]));
 	return [...new Set(locations.sort( (a,b) => aCount.get(b) - aCount.get(a) )), 'ALL'];
 }
 
 function getRequiredCats(){
-	const chosenCats = _OKCP.parseStorageObject('okcpChosenCategories');
+	var chosenCats = _OKCP.parseStorageObject('okcpChosenCategories');
 	return Object.keys(chosenCats).filter(key => chosenCats[key])
 }
 function getShowAllBool(){return (localStorage.displayAllCategories == "false" ? false : true)}
 function getHideWeakBool(){return (localStorage.hideWeakParticipants == "false" ? false : true)}
 _OKCP.parseStorageObject = (key) => JSON.parse(localStorage[key] || "{}") || {};
 function spaces(str){ return str.replace(/(\-|_)/g, ' ') }
-// 
-// $(pageResultsDiv).find('[id]').each(function(){
-// 	if ($(this).attr('id').includes('question_')) {
-// 		const qid = $(this).attr('id').split('question_')[1];
-// 		const ansEls = $(this).find('.container.my_answer label.radio');
-// 		let answerText
-// 		try {answerText = $.map(ansEls, (el) => $(el).text().trim())}
-// 		catch(e) {return}
-// 		if (!answerText) return;
-// 
-// 		(window['pageQuestions'+name] || []).push({
-// 			text: $(this).find('.qtext').text().trim(),
-// 			answerText,
-// 			qid,
-// 			score: []
-// 		});
-// 	}
-// });
+

@@ -181,7 +181,6 @@ _OKCP.getUserId = function(userName){
 }
 
 _OKCP.getLikePassParams = function(userId, likeBool, userName) {
-  console.log({userId, likeBool, userName});
   if (likeBool === 'pass') {
     passList.push('usr'+userName)
     localStorage.passList = JSON.stringify(passList);

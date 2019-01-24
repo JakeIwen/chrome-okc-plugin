@@ -81,8 +81,6 @@ window.OkC = {
 	api(path, params) {
 		// this is the v1 api client, but if we released a v2 of the api, we could
 		// check for `params && params.api`
-		console.log({path});
-		console.log(JSON.stringify({params}, null, 2))
 		return this.api_edge(path, params);
 	},
 
@@ -116,14 +114,10 @@ window.OkC = {
 			"X-OkCupid-Platform": "DESKTOP",
 		};
 
-		if (
-			typeof ACCESS_TOKEN !== "undefined" &&
-			ACCESS_TOKEN !== null &&
-			ACCESS_TOKEN !== ""
-		) {
-			console.log("setting token");
+		if ( typeof ACCESS_TOKEN !== "undefined" && ACCESS_TOKEN !== null && ACCESS_TOKEN !== "" ) {
 			baseHeaders["Authorization"] = `Bearer ${ACCESS_TOKEN}`;
 		}
+		
 		if (params.version) {
 			baseHeaders.endpoint_version = params.version;
 		}
@@ -133,7 +127,6 @@ window.OkC = {
 
 		let ajaxParams = _.extend({}, params);
 		ajaxParams.headers = _.extend(baseHeaders, params.headers);
-		console.log({ajaxParams});
 		// JSON data handling
 		// ----------------------------------------------------------------------
 
