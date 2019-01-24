@@ -15,16 +15,16 @@ _OKCP.getHoverAnswers = function ($card) {
 
 	var answers = window.answers;
 
-	if (answers[name] && answers[name].includes(name)) {
-
-		$($($card).find(`.user${window.onLikes ? 'row' : 'card'}-info`)[0]).after(answers[name]);
-	
-		removeDupes();
-		_OKCP.purgeMismatches($card);
-		// saveCard();
-		return;
-	}
-	
+	// if (answers[name] && answers[name].includes(name)) {
+	// 
+	// 	$($($card).find(`.user${window.onLikes ? 'row' : 'card'}-info`)[0]).after(answers[name]);
+	// 
+	// 	removeDupes();
+	// 	_OKCP.purgeMismatches($card);
+	// 	// saveCard();
+	// 	return;
+	// }
+	// 
 	console.log('making new');
 	var ratioList = $(`<table class="match-ratios-wrapper-outer-hover hover ${window.onLikes ? 'likes-view' : ''} ${name}"><tr><td class="match-ratios">
 		<ul class="match-ratios-list-hover ${name}"></ul>
@@ -51,7 +51,8 @@ _OKCP.getHoverAnswers = function ($card) {
 
 	function loadData(response, status, xhr) {
 		numRequestsFinished++;
-		
+		console.log('len', response.length);
+		debugger;
 		if ( status === "error" ) {
 			console.log("Request failed on number " + numRequestsMade);
 			
@@ -66,6 +67,7 @@ _OKCP.getHoverAnswers = function ($card) {
 			console.log('short response', {response, xhr});
 		}
 		
+		setTimeout(()=>parseCombinedPages(pageResultsDiv), 500)
 		if (!finished && (numRequestsFinished >= Math.min(numQuestionPages, numRequestsMade))) {
 			if (numRequestsFinished >= numQuestionPages){
 				finished = true;
@@ -80,7 +82,7 @@ _OKCP.getHoverAnswers = function ($card) {
 	}
 	
 	function parseCombinedPages(pageResultsDiv){
-		
+		debugger;
 		$(pageResultsDiv).find('[id]').each(function(){
 			if ($(this).attr('id').includes('question_')) {
 				const qid = $(this).attr('id').split('question_')[1];
@@ -104,20 +106,21 @@ _OKCP.getHoverAnswers = function ($card) {
 			for (var i = 0; i < categoryQuestionList.length; i++) {
 				var listItem = categoryQuestionList[i];
 				var theirAnswer, theirAnswerIndex, theirNote, yourAnswer, yourNote, answerScore, answerWeight, answerScoreWeighted;
-
 				var num = listItem.qid;
 				var possibleAnswers = listItem.answerText;
-				
-				var questionElem = $(pageResultsDiv).find('#question_' + num).not('.not_answered');
+				console.log('lit', listItem.text);
+				console.log($(pageResultsDiv));
+				debugger;
+				var questionElem = listItem.text ? $(pageResultsDiv).find(`.profile-question-text:contains(${listItem.text})`).closest('.profile-question'): [];
 				if (questionElem.length === 0) continue;
-				var questionText = questionElem.find('.qtext').text().trim();
+				var questionText = questionElem.find('.profile-question-text').text().trim();
+				if(questionElem.length) debugger;
 				
 				if (questionText === "") continue;
 				
 				var alreadyExists = questionList.find(q => q.qid==num)
 				if (alreadyExists) continue;
 			
-
 				theirAnswer = questionElem.find("#answer_target_"+num).text().trim();
 				if (theirAnswer === '') continue; //if the answer elem doesn't exist, continue
 				theirNote   = questionElem.find("#note_target_"+num).text().trim();
@@ -170,8 +173,8 @@ _OKCP.getHoverAnswers = function ($card) {
 	}
 	
 	function nextRequest(){
-		for (var i = 0; i < 25; i++) {
-			url = "//www.okcupid.com/profile/" + name.replace(/^usr/, '') + "/questions?n=2&low=" + (questionPageNum*10+1) + "&leanmode=1";
+		for (var i = 0; i < 1; i++) {
+			url = `https://www.okcupid.com/profile/8112665045524396488/questions?n=2&low=1&leanmode=1`;
 			if (i==9) console.log('got ', questionPageNum, ' pages for', name)
 			console.log('loading page hover', url);
 			if (!requestFailed && (numRequestsMade < numQuestionPages)) {

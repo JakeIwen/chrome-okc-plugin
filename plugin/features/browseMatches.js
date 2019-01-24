@@ -186,11 +186,9 @@ _OKCP.getLikePassParams = function(userId, likeBool, userName) {
     passList.push('usr'+userName)
     localStorage.passList = JSON.stringify(passList);
   }
-  
   return {
     path: '/likes/batch',
     params: {
-      // headers: {newRef: `https://www.okcupid.com/profile/${userName}?cf=regular,matchsearch`},
       api: 1,
       type: "POST",
       data: {
@@ -204,3 +202,25 @@ _OKCP.getLikePassParams = function(userId, likeBool, userName) {
     }
   }
 }
+
+_OKCP.getApiAnswers = async function(userId){
+  let end = false
+  let cursor = '';
+  let answers = [];
+  do{
+    let {path, params} = getAnswersParams(userId, cursor)
+    const {data, paging} = await window.OkC.api(path, params);
+    answers.push(...data);
+    cursor = paging.cursors.after;
+    end = paging.end
+  } while(!end)
+  return answers;
+  
+  function getAnswersParams(userId, cursor='') {
+    return {
+      path: `/profile/${userId}/answers?after=${cursor}`,
+      params: { api: 1, type: "GET", }
+    }
+  }
+}
+

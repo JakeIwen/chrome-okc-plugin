@@ -10,11 +10,17 @@ _OKCP.getAnswers = function (list) {
 	var requestFailed = false;
 	var recentProfiles = localStorage.okcpRecentProfiles ? JSON.parse(localStorage.okcpRecentProfiles) : {"_ATTENTION":"This is just temporary caching to avoid hitting the server a million times. Notice there's an expires time built in for each key."};
 
-	if (_OKCP.onOwnProfile) { //on own profile
+	if (true || _OKCP.onOwnProfile) { //on own profile
+		var userId = window.location.href.split('/profile/')[1].split('?')[0]
+		setTimeout(()=>_OKCP.getApiAnswers(userId).then(answers => {
+			console.log('answers', answers);
+		}), 1000)
 		log.info('on own profile');
 		$('.spinner').hide();
 		return false;
-	}
+	} else {
+		
+
 
 	// get list of questions and categories to compare to
 	if (list === undefined) {
@@ -22,19 +28,18 @@ _OKCP.getAnswers = function (list) {
 	}
 
 	// check for cached question data
-	if (!!recentProfiles[_OKCP.profileName] && _OKCP.cacheEnabled && new Date().getTime() - recentProfiles[_OKCP.profileName].expires < 0) {
-		// console.log('cached');
-		recentProfiles[_OKCP.profileName].expires = new Date().getTime() + 300000; //reset expires
-		questionList = recentProfiles[_OKCP.profileName].questionList;
-		responseCount = recentProfiles[_OKCP.profileName].responseCount;
-		areWeDone(true);
-	} else {
+	// if (!!recentProfiles[_OKCP.profileName] && _OKCP.cacheEnabled && new Date().getTime() - recentProfiles[_OKCP.profileName].expires < 0) {
+	// 	// console.log('cached');
+	// 	recentProfiles[_OKCP.profileName].expires = new Date().getTime() + 300000; //reset expires
+	// 	questionList = recentProfiles[_OKCP.profileName].questionList;
+	// 	responseCount = recentProfiles[_OKCP.profileName].responseCount;
+	// 	areWeDone(true);
+	// } else {
 		// console.log('not cached');
 		loadProfileAnswers();
-	}
+	// }
 
-	function loadData(response, status) {
-		debugger;
+	function loadData(response, status, xhr, pageResultsDiv) {
 		if ( status === "error" ) {
 			numRequestsFinished++;
 			console.log("Request failed on number " + numRequestsMade);
@@ -42,7 +47,11 @@ _OKCP.getAnswers = function (list) {
 			return false;
 		}
 		numRequestsFinished++;
-
+		// if(numRequestsFinished >= _OKCP.numQuestionPages) {
+		// 	console.log('appending');
+		// 	$(pageResultsDiv).find('script').remove()
+		// 	$(pageResultsDiv).appendTo('body');
+		// }
 		//fix the illegal ids that break jQuery
 		$(this).find('[id]').each(function(){
 			var elem = $(this);
@@ -52,9 +61,10 @@ _OKCP.getAnswers = function (list) {
 				$(this).attr('id',idArr[1]);
 			}
 		});
-
+		
 		for (var category in list) {
 			var categoryQuestionList = list[category];
+			
 			for (var i = 0; i < categoryQuestionList.length; i++) {
 				var listItem = categoryQuestionList[i];
 				var theirAnswer, theirAnswerIndex, theirNote, yourAnswer, yourNote, answerScore, answerWeight, answerScoreWeighted;
@@ -63,12 +73,14 @@ _OKCP.getAnswers = function (list) {
 				var possibleAnswers = listItem.answerText;
 				// var questionElem = $('#question_' + num + '[public]');		//misses some
 				var questionElem = $('#question_' + num);
-
+				if(questionElem.length) console.log('qel', questionElem);
+				debugger;
 				// if question isn't present on page, continue
 				if (questionElem.length === 0) {continue;}
 
 				// get question information
 				var questionText = questionElem.find('.qtext').text().trim();
+				console.log('questionText', questionText);
 				if (questionText === "") continue;
 
 			    if (_OKCP.onOwnProfile) {
@@ -102,6 +114,7 @@ _OKCP.getAnswers = function (list) {
 				responseCount[category][0] += answerScoreWeighted;
 				responseCount[category][1] += answerWeight;
 				// console.log(num + " - " + questionText);
+				console.log({questionList});
 				questionList.push({
 					question: questionText,
 					qid: num,
@@ -123,18 +136,20 @@ _OKCP.getAnswers = function (list) {
 	}
 
 	function loadProfileAnswers() {
-		
-		initRequests()
-		// oldLoad();
+		var name;
+		// initRequests()
+		oldLoad();
 		function initRequests(){
-			var name = 'usr' + window.location.href.split('/profile/')[1].split('/')[0]
+			name = 'usr' + window.location.href.split('/profile/')[1].split('/')[0]
 			
-			pageResultsDiv = $('<div class="page-results '+name+'"></div>')
+			pageResultsDiv = $('<div class="page-results"></div>')
 
 			$.get(`https://www.okcupid.com/profile/${name.replace(/^usr/, '')}/questions`, data => {
 				numQuestionPages = parseInt($(data).find('a.last').text()) || 20;
 				console.log(`name: ${name}, numpages: ${numQuestionPages}`);
 				nextRequest();
+				// oldLoad();
+				
 			})
 		}
 		
@@ -142,7 +157,8 @@ _OKCP.getAnswers = function (list) {
 			for (var i = 0; i < 25; i++) {
 				url = "//www.okcupid.com/profile/" + name.replace(/^usr/, '') + "/questions?n=2&low=" + (questionPageNum*10+1) + "&leanmode=1";
 				if (i==9) console.log('got ', questionPageNum, ' pages for', name)
-				console.log('loading page hover', url);
+				// console.log('loading page hover', url);
+				
 				// if (!requestFailed && (numRequestsMade < numQuestionPages)) {
 					questionPageNum++;
 					// numRequestsMade++;
@@ -153,29 +169,31 @@ _OKCP.getAnswers = function (list) {
 			}
 		}
 		function oldLoad(){
+			
+			var name = 'usr' + window.location.href.split('/profile/')[1].split('/')[0]
+
+			
 			if (location.href.split('/profile/')[1] === undefined) return false;
 			//loop through every question page
 			var pageResultsDiv = $('<div id="page-results"></div>').appendTo('body');
 			$('#footer').append('<a class="page-results-link" href="#page-results">Show question results</a>');
 			
 			while (!requestFailed && numRequestsMade < _OKCP.numQuestionPages) {
+				url = "//www.okcupid.com/profile/" + name.replace(/^usr/, '') + "/questions?n=2&low=" + (questionPageNum*10+1) + "&leanmode=1";
+				
 				updateQuestionPath();
-				console.log('loading page getanswers ',  {questionPath});
+				console.log('loading page getanswers ',  {questionPath, url});
 				numRequestsMade++;
 			
-				$('<div id="page-results-' + questionPageNum + '"></div>')
+				$('<div class="page-results-' + questionPageNum + '"></div>')
 					.appendTo(pageResultsDiv)
-					.load(questionPath, (response, status, xhr)=>loadData(response, status, xhr));
+					.load(questionPath + ' html', (response, status, xhr)=>loadData(response, status, xhr, pageResultsDiv));
 			}
 		}
 	}
 
 	function updateQuestionPath (pageNum) {
 		if (_OKCP.questionFetchingMethod === "original" || _OKCP.questionFetchingMethod === "mobile_app") {
-			var questionFilterParameter = 'i_care=1';
-			if (_OKCP.onOwnProfile) {
-				questionFilterParameter = 'very_important=1';
-			}
 			questionPageNum = pageNum || questionPageNum;
 			questionPath = "//www.okcupid.com/profile/" + _OKCP.profileName + "/questions?n=2&low=" + (questionPageNum*10+1);
 			if (_OKCP.questionFetchingMethod === "mobile_app") questionPath += '&leanmode=1';
@@ -205,9 +223,10 @@ _OKCP.getAnswers = function (list) {
 			$('.spinner').fadeOut(300);
 			_OKCP.getAnswersFinished = true;
 		}
-
 		$('.match-ratios-list').html('');
 		$('.question-detail > ul').remove();
+		console.log('mrl', {responseCount	});
+		
 		for (var category in responseCount) {
 			var countArr = responseCount[category];
 			var matchClass = 'match-' + Math.floor(countArr[0]/countArr[1]*5);
@@ -228,7 +247,7 @@ _OKCP.getAnswers = function (list) {
 			var denominatorArr = denominator.split('.');
 			if (denominator*1 <= 0.5) continue;
 			var matchRatioHtmlValue = '<span class="integer">' + numeratorArr[0] + '</span><span class="point">.</span><span class="decimal">'+(numeratorArr[1] || '0')+'</span><span class="slash">/</span><span class="integer">' + denominatorArr[0] + '</span><span class="point">.</span><span class="decimal">'+(denominatorArr[1] || '0')+'</span>';
-			
+			console.log('mrhtmlrv', matchRatioHtmlValue);
 			$('<li class="match-ratio ' + matchClass + '" category="'+category+'"><span class="match-ratio-progressbar ' + matchClass + '" style="width:' + (Math.round(countArr[0]/countArr[1]*93)+7) + '%"></span><span class="match-ratio-category">' + categoryReadable + '</span><span class="match-ratio-value">' + matchRatioHtmlValue + '</span></li>')
 				.appendTo('.match-ratios-list')
 				.hover(function(e){
@@ -303,4 +322,5 @@ _OKCP.clearCachedQuestionData = function() {
 		delete recentProfiles[profile]; // remove not-recently visited profiles
 	}
 	localStorage.okcpRecentProfiles = JSON.stringify(recentProfiles);
+}
 };

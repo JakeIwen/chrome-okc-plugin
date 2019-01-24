@@ -124,7 +124,6 @@ window.OkC = {
 			console.log("setting token");
 			baseHeaders["Authorization"] = `Bearer ${ACCESS_TOKEN}`;
 		}
-
 		if (params.version) {
 			baseHeaders.endpoint_version = params.version;
 		}
