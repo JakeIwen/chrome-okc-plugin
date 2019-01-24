@@ -204,10 +204,13 @@ _OKCP.getLikePassParams = function(userId, likeBool, userName) {
 }
 
 _OKCP.getApiAnswers = async function(userId){
+  if(!window.ACCESS_TOKEN){
+    await _OKCP.timeout(1000);
+  }
   let end = false
   let cursor = '';
   let answers = [];
-  do{
+  do{ //must be async because we need to get the cursor from each response
     let {path, params} = getAnswersParams(userId, cursor)
     const {data, paging} = await window.OkC.api(path, params);
     answers.push(...data);
@@ -218,9 +221,13 @@ _OKCP.getApiAnswers = async function(userId){
   
   function getAnswersParams(userId, cursor='') {
     return {
-      path: `/profile/${userId}/answers?after=${cursor}`,
+      path: `/profile/${userId}/answers?after=${cursor}&_=1548312928968`,
       params: { api: 1, type: "GET", }
     }
   }
+}
+
+_OKCP.timeout = function (ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 

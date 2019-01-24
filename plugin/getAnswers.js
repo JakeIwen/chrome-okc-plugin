@@ -10,11 +10,7 @@ _OKCP.getAnswers = function (list) {
 	var requestFailed = false;
 	var recentProfiles = localStorage.okcpRecentProfiles ? JSON.parse(localStorage.okcpRecentProfiles) : {"_ATTENTION":"This is just temporary caching to avoid hitting the server a million times. Notice there's an expires time built in for each key."};
 
-	if (true || _OKCP.onOwnProfile) { //on own profile
-		var userId = window.location.href.split('/profile/')[1].split('?')[0]
-		setTimeout(()=>_OKCP.getApiAnswers(userId).then(answers => {
-			console.log('answers', answers);
-		}), 1000)
+	if (_OKCP.onOwnProfile) { //on own profile
 		log.info('on own profile');
 		$('.spinner').hide();
 		return false;
@@ -39,64 +35,21 @@ _OKCP.getAnswers = function (list) {
 		loadProfileAnswers();
 	// }
 
-	function loadData(response, status, xhr, pageResultsDiv) {
-		if ( status === "error" ) {
-			numRequestsFinished++;
-			console.log("Request failed on number " + numRequestsMade);
-			requestFailed = true;
-			return false;
-		}
-		numRequestsFinished++;
-		// if(numRequestsFinished >= _OKCP.numQuestionPages) {
-		// 	console.log('appending');
-		// 	$(pageResultsDiv).find('script').remove()
-		// 	$(pageResultsDiv).appendTo('body');
-		// }
-		//fix the illegal ids that break jQuery
-		$(this).find('[id]').each(function(){
-			var elem = $(this);
-			var oldID = elem.attr('id');
-			var idArr = oldID.split('\\\"');
-			if (idArr.length > 2) {
-				$(this).attr('id',idArr[1]);
-			}
-		});
-		
+	function loadData(answer) {
+		const {target, viewer, question} = answer
 		for (var category in list) {
 			var categoryQuestionList = list[category];
 			
 			for (var i = 0; i < categoryQuestionList.length; i++) {
 				var listItem = categoryQuestionList[i];
-				var theirAnswer, theirAnswerIndex, theirNote, yourAnswer, yourNote, answerScore, answerWeight, answerScoreWeighted;
-
-				var num = listItem.qid;
+				
+				if(parseInt(listItem.qid) !== question.id) continue;
+				
+				var theirAnswerIndex, answerScore, answerWeight, answerScoreWeighted;
+				const theirAnswer = question.answers[target.answer];
 				var possibleAnswers = listItem.answerText;
-				// var questionElem = $('#question_' + num + '[public]');		//misses some
-				var questionElem = $('#question_' + num);
-				if(questionElem.length) console.log('qel', questionElem);
-				debugger;
-				// if question isn't present on page, continue
-				if (questionElem.length === 0) {continue;}
 
-				// get question information
-				var questionText = questionElem.find('.qtext').text().trim();
-				console.log('questionText', questionText);
-				if (questionText === "") continue;
-
-			    if (_OKCP.onOwnProfile) {
-				// TODO: Fix own profile view - we need the text of the label which follows the <input>
-				// element that is checked
-					theirAnswer = questionElem.find(".my_answer input:checked + label").text().trim();
-					theirNote = questionElem.find(".explanation textarea").text().trim();
-				} else {
-					theirAnswer = questionElem.find("#answer_target_"+num).text().trim();
-					if (theirAnswer === '') continue; //if the answer elem doesn't exist, continue
-					theirNote   = questionElem.find("#note_target_"+num).text().trim();
-					yourAnswer  = questionElem.find("#answer_viewer_"+num).text().trim();
-					yourNote    = questionElem.find("#note_viewer_"+num).text().trim();
-				}
 				for (var j = 0; j < possibleAnswers.length; j++) {
-					// console.log(questionText + "  " + theirAnswer + " | " + wrongAnswers[j]);
 					if (possibleAnswers[j] === theirAnswer) {
 						theirAnswerIndex = j;
 						break;
@@ -106,22 +59,20 @@ _OKCP.getAnswers = function (list) {
 				answerWeight = listItem.weight ? listItem.weight[theirAnswerIndex] || 0 : 1;
 				if (answerWeight === 0) continue;
 				answerScoreWeighted = ((answerScore+1) / 2) * answerWeight;
-				// console.log(answerScore + " " + answerWeight);
 
 				//ensure there's an entry for the category count
 				if (!responseCount[category]) responseCount[category] = [0,0];
 
 				responseCount[category][0] += answerScoreWeighted;
 				responseCount[category][1] += answerWeight;
-				// console.log(num + " - " + questionText);
-				console.log({questionList});
+
 				questionList.push({
-					question: questionText,
-					qid: num,
+					question: question.text,
+					qid: String(question.id),
 					theirAnswer: theirAnswer,
-					theirNote: theirNote,
-					yourAnswer: yourAnswer,
-					yourNote: yourNote,
+					theirNote: (target.note || {}).note ||'',
+					yourAnswer: question.answers[viewer.answer],
+					yourNote: (viewer.note || {}).note ||'',
 					answerScore: answerScore,
 					answerWeight: answerWeight,
 					answerScoreWeighted: answerScoreWeighted,
@@ -131,75 +82,17 @@ _OKCP.getAnswers = function (list) {
 				listItem.qid = listItem.qid+"-used";
 			}
 		}
-		// console.log(questionList);
+	}
+
+	async function loadProfileAnswers() {
+		var userId = window.location.href.split('/profile/')[1].split('?')[0]
+		var apiAnswers = await _OKCP.getApiAnswers(userId);
+		apiAnswers.forEach(answerObj => loadData(answerObj))
+		console.log({questionList, responseCount});
 		areWeDone(false);
 	}
 
-	function loadProfileAnswers() {
-		var name;
-		// initRequests()
-		oldLoad();
-		function initRequests(){
-			name = 'usr' + window.location.href.split('/profile/')[1].split('/')[0]
-			
-			pageResultsDiv = $('<div class="page-results"></div>')
 
-			$.get(`https://www.okcupid.com/profile/${name.replace(/^usr/, '')}/questions`, data => {
-				numQuestionPages = parseInt($(data).find('a.last').text()) || 20;
-				console.log(`name: ${name}, numpages: ${numQuestionPages}`);
-				nextRequest();
-				// oldLoad();
-				
-			})
-		}
-		
-		function nextRequest(){
-			for (var i = 0; i < 25; i++) {
-				url = "//www.okcupid.com/profile/" + name.replace(/^usr/, '') + "/questions?n=2&low=" + (questionPageNum*10+1) + "&leanmode=1";
-				if (i==9) console.log('got ', questionPageNum, ' pages for', name)
-				// console.log('loading page hover', url);
-				
-				// if (!requestFailed && (numRequestsMade < numQuestionPages)) {
-					questionPageNum++;
-					// numRequestsMade++;
-					$('<div class="page-results-' + questionPageNum + ' page-results-' + name + '"></div>')
-						.appendTo(pageResultsDiv)
-						.load(url, (response, status, xhr)=>loadData(response, status, xhr));
-				// }
-			}
-		}
-		function oldLoad(){
-			
-			var name = 'usr' + window.location.href.split('/profile/')[1].split('/')[0]
-
-			
-			if (location.href.split('/profile/')[1] === undefined) return false;
-			//loop through every question page
-			var pageResultsDiv = $('<div id="page-results"></div>').appendTo('body');
-			$('#footer').append('<a class="page-results-link" href="#page-results">Show question results</a>');
-			
-			while (!requestFailed && numRequestsMade < _OKCP.numQuestionPages) {
-				url = "//www.okcupid.com/profile/" + name.replace(/^usr/, '') + "/questions?n=2&low=" + (questionPageNum*10+1) + "&leanmode=1";
-				
-				updateQuestionPath();
-				console.log('loading page getanswers ',  {questionPath, url});
-				numRequestsMade++;
-			
-				$('<div class="page-results-' + questionPageNum + '"></div>')
-					.appendTo(pageResultsDiv)
-					.load(questionPath + ' html', (response, status, xhr)=>loadData(response, status, xhr, pageResultsDiv));
-			}
-		}
-	}
-
-	function updateQuestionPath (pageNum) {
-		if (_OKCP.questionFetchingMethod === "original" || _OKCP.questionFetchingMethod === "mobile_app") {
-			questionPageNum = pageNum || questionPageNum;
-			questionPath = "//www.okcupid.com/profile/" + _OKCP.profileName + "/questions?n=2&low=" + (questionPageNum*10+1);
-			if (_OKCP.questionFetchingMethod === "mobile_app") questionPath += '&leanmode=1';
-			questionPageNum++;
-		}
-	}
 
 	// if we're done, it hides the spinner and adds the UI, then sorts the categories
 	function areWeDone(fromCached) {

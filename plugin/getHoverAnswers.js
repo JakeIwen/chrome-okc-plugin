@@ -15,16 +15,6 @@ _OKCP.getHoverAnswers = function ($card) {
 
 	var answers = window.answers;
 
-	// if (answers[name] && answers[name].includes(name)) {
-	// 
-	// 	$($($card).find(`.user${window.onLikes ? 'row' : 'card'}-info`)[0]).after(answers[name]);
-	// 
-	// 	removeDupes();
-	// 	_OKCP.purgeMismatches($card);
-	// 	// saveCard();
-	// 	return;
-	// }
-	// 
 	console.log('making new');
 	var ratioList = $(`<table class="match-ratios-wrapper-outer-hover hover ${window.onLikes ? 'likes-view' : ''} ${name}"><tr><td class="match-ratios">
 		<ul class="match-ratios-list-hover ${name}"></ul>
@@ -81,26 +71,9 @@ _OKCP.getHoverAnswers = function ($card) {
 		
 	}
 	
-	function parseCombinedPages(pageResultsDiv){
+	function loadData(answer){
 		debugger;
-		$(pageResultsDiv).find('[id]').each(function(){
-			if ($(this).attr('id').includes('question_')) {
-				const qid = $(this).attr('id').split('question_')[1];
-				const ansEls = $(this).find('.container.my_answer label.radio');
-				let answerText
-				try {answerText = $.map(ansEls, (el) => $(el).text().trim())}
-				catch(e) {return}
-				if (!answerText) return;
-				
-			  (window['pageQuestions'+name] || []).push({
-					text: $(this).find('.qtext').text().trim(),
-					answerText,
-					qid,
-					score: []
-				});
-			}
-		});
-		
+
 		for (var category in list) {
 			var categoryQuestionList = list[category];
 			for (var i = 0; i < categoryQuestionList.length; i++) {
@@ -162,14 +135,14 @@ _OKCP.getHoverAnswers = function ($card) {
 		}
 	}
 	
-	function initRequests(){
-		pageResultsDiv = $('<div class="page-results '+name+'"></div>')
-
-		$.get(`https://www.okcupid.com/profile/${name.replace(/^usr/, '')}/questions`, data => {
-			numQuestionPages = parseInt($(data).find('a.last').text()) || 20;
-			console.log(`name: ${name}, numpages: ${numQuestionPages}`);
-			nextRequest();
-		})
+	async function initRequests(){
+		const userName = _OKCP.getUserName($card);
+    const userId = await _OKCP.getUserId(userName)
+		var userId = window.location.href.split('/profile/')[1].split('?')[0]
+		var apiAnswers = await _OKCP.getApiAnswers(userId);
+		apiAnswers.forEach(answerObj => loadData(answerObj))
+		console.log({questionList, responseCount});
+		areWeDone(false);
 	}
 	
 	function nextRequest(){
@@ -508,3 +481,21 @@ function getShowAllBool(){return (localStorage.displayAllCategories == "false" ?
 function getHideWeakBool(){return (localStorage.hideWeakParticipants == "false" ? false : true)}
 _OKCP.parseStorageObject = (key) => JSON.parse(localStorage[key] || "{}") || {};
 function spaces(str){ return str.replace(/(\-|_)/g, ' ') }
+// 
+// $(pageResultsDiv).find('[id]').each(function(){
+// 	if ($(this).attr('id').includes('question_')) {
+// 		const qid = $(this).attr('id').split('question_')[1];
+// 		const ansEls = $(this).find('.container.my_answer label.radio');
+// 		let answerText
+// 		try {answerText = $.map(ansEls, (el) => $(el).text().trim())}
+// 		catch(e) {return}
+// 		if (!answerText) return;
+// 
+// 		(window['pageQuestions'+name] || []).push({
+// 			text: $(this).find('.qtext').text().trim(),
+// 			answerText,
+// 			qid,
+// 			score: []
+// 		});
+// 	}
+// });
