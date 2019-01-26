@@ -243,77 +243,77 @@ _OKCP.createStorageControl = function(storageKey, label, containerSelector, clas
 _OKCP.loadHoverOptions = function() {
 	window.existingNames = [];
 	setInterval(_OKCP.updateCards, 1000);
-  setTimeout(setFilters, 1000)
+  setTimeout(_OKCP.setFilters, 1000)
+}
+
+_OKCP.setMainResetBtn = function($wrapper){
+	var $btn = $(`<button name="reset" class="binary_rating_button silver flatbutton reset-all-btn">
+			<span class="rating_like">Reset</span>
+		</button>`)
+	$($btn).click((event) => {
+		window.answers = "{}";
+		localStorage.setItem('answers', "{}");
+		localStorage.setItem('savedQuestions', "[]");
+		$('.match-ratios-wrapper-outer-hover').remove();
+		console.log('reset storage complete');
+	});
+	$($wrapper).append($btn);
+}
+
+_OKCP.setFilters = function(){
 	
-	function setFilters(){
-		
-		var $catFilters = $(`<div class="category-filters"><h4>Categories</h4></div>`)
-		var $locWrapper = $(`<div class="location-filters"><h3>Locations</h3></div>`);
-		
-		var controlDiv = $(`<div class="control-div"></div>`);
-		_OKCP.createStorageControl('displayAllCategories', 'Show All Categories', controlDiv, 'show-all')
-		_OKCP.createStorageControl('hideWeakParticipants', 'HideWeakParticipants', controlDiv, 'hide-weak')
-		setMainResetBtn(controlDiv);
-		
-		var $filterWrapper =  $(`<div class="custom-filter-wrapper"></div>`)
-															.append(controlDiv, $catFilters, $locWrapper)
-															.hide();
-		
-		$('body').append($filterWrapper);
-		
-		var questions = _OKCP.parseStorageObject('okcpDefaultQuestions').questionsList;
-		var chosenCats = _OKCP.parseStorageObject('okcpChosenCategories');
-		
-		Object.keys(questions).forEach(category => {
-			var shouldBeChecked = Boolean(chosenCats[category]);
-			var $wrapper = $(`<ul class="category-wrapper"></ul>`).appendTo($catFilters);
-			$wrapper.append(`<li>${category} <input type="checkbox" cat-attr="${category}" ${shouldBeChecked && 'checked'} /></li>`)
-			$($wrapper).click(function(){
-				console.log('wrapper', this);
-				var cat = $(this).find("[cat-attr]").attr("cat-attr");
-				var newVal = !chosenCats[cat];
-				chosenCats[cat] = newVal;
-				localStorage.okcpChosenCategories = JSON.stringify(chosenCats);
-				$(cat).attr("checked", newVal);
-				$('.match-ratios-wrapper-outer-hover').remove();
-				window.existingNames = [];
-				_OKCP.updateCards();
-				_OKCP.purgeMismatches();
-			})
-		})
-		
-		var aList = $(`#navigation > div.nav-left > ul > li:nth-child(3)`).empty();
-		var $showFiltersBtn = $(`<a><span class="text"> Custom Filters </span></a>`)
-		$(aList).prepend($showFiltersBtn);
-		$($showFiltersBtn).click(()=>clickToggle());
-		// clickToggle(true);
-		
-		function clickToggle(init){
-			var show = init ? false : window['showOkcpFilters'];
-			window['showOkcpFilters'] = !show;
-			console.log(`window['showOkcpFilters'] `, window['showOkcpFilters'] );
-			show ? $($filterWrapper).hide() : $($filterWrapper).show();
-			$($showFiltersBtn).show();
-		}
-
-
-		setInterval(()=>_OKCP.updateLocationsEl($filterWrapper), 2000);
-
-	}
-
-	function setMainResetBtn($wrapper){
-		var $btn = $(`<button name="reset" class="binary_rating_button silver flatbutton reset-all-btn">
-				<span class="rating_like">Reset</span>
-			</button>`)
-		$($btn).click((event) => {
-			window.answers = "{}";
-			localStorage.setItem('answers', "{}");
-			localStorage.setItem('savedQuestions', "[]");
+	var $catFilters = $(`<div class="category-filters"><h4>Categories</h4></div>`)
+	var $locWrapper = $(`<div class="location-filters"><h3>Locations</h3></div>`);
+	
+	var controlDiv = $(`<div class="control-div"></div>`);
+	_OKCP.createStorageControl('displayAllCategories', 'Show All Categories', controlDiv, 'show-all')
+	_OKCP.createStorageControl('hideWeakParticipants', 'HideWeakParticipants', controlDiv, 'hide-weak')
+	_OKCP.setMainResetBtn(controlDiv);
+	
+	var $filterWrapper =  $(`<div class="custom-filter-wrapper"></div>`)
+														.append(controlDiv, $catFilters, $locWrapper)
+														.hide();
+	
+	$('body').append($filterWrapper);
+	
+	var questions = _OKCP.parseStorageObject('okcpDefaultQuestions').questionsList;
+	var chosenCats = _OKCP.parseStorageObject('okcpChosenCategories');
+	
+	Object.keys(questions).forEach(category => {
+		var shouldBeChecked = Boolean(chosenCats[category]);
+		var $wrapper = $(`<ul class="category-wrapper"></ul>`).appendTo($catFilters);
+		$wrapper.append(`<li>${category} <input type="checkbox" cat-attr="${category}" ${shouldBeChecked && 'checked'} /></li>`)
+		$($wrapper).click(function(){
+			console.log('wrapper', this);
+			var cat = $(this).find("[cat-attr]").attr("cat-attr");
+			var newVal = !chosenCats[cat];
+			chosenCats[cat] = newVal;
+			localStorage.okcpChosenCategories = JSON.stringify(chosenCats);
+			$(cat).attr("checked", newVal);
 			$('.match-ratios-wrapper-outer-hover').remove();
-			console.log('reset storage complete');
-		});
-		$($wrapper).append($btn);
+			window.existingNames = [];
+			_OKCP.updateCards();
+			_OKCP.purgeMismatches();
+		})
+	})
+	
+	var aList = $(`#navigation > div.nav-left > ul > li:nth-child(3)`).empty();
+	var $showFiltersBtn = $(`<a><span class="text"> Custom Filters </span></a>`)
+	$(aList).prepend($showFiltersBtn);
+	$($showFiltersBtn).click(()=>clickToggle());
+	// clickToggle(true);
+	
+	function clickToggle(init){
+		var show = init ? false : window['showOkcpFilters'];
+		window['showOkcpFilters'] = !show;
+		console.log(`window['showOkcpFilters'] `, window['showOkcpFilters'] );
+		show ? $($filterWrapper).hide() : $($filterWrapper).show();
+		$($showFiltersBtn).show();
 	}
+
+
+	setInterval(()=>_OKCP.updateLocationsEl($filterWrapper), 2000);
+
 }
 
 

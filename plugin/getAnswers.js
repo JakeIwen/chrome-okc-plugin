@@ -9,13 +9,17 @@ _OKCP.getAnswers = function (doubleTake) {
 	var questionPath; //for storing the path of the question page as we iterate
 	var requestFailed = false;
 	var recentProfiles = localStorage.okcpRecentProfiles ? JSON.parse(localStorage.okcpRecentProfiles) : {"_ATTENTION":"This is just temporary caching to avoid hitting the server a million times. Notice there's an expires time built in for each key."};
+	
+	_OKCP.setFilters();
+	
+	
 	if (false && _OKCP.onOwnProfile) { //on own profile
 		
 		log.info('on own profile');
 		$('.spinner').hide();
 		return false;
 	} else {
-		
+	
 	// get list of questions and categories to compare to
 	
 	var	list = localStorage.okcpDefaultQuestions ? JSON.parse(localStorage.okcpDefaultQuestions).questionsList : {};
@@ -48,7 +52,7 @@ _OKCP.getAnswers = function (doubleTake) {
 				var possibleAnswers = listItem.answerText;
 
 				for (var j = 0; j < possibleAnswers.length; j++) {
-					if (possibleAnswers[j] === theirAnswer) {
+					if (possibleAnswers[j].replace(/\./g, '') === theirAnswer.replace(/\./g, '')) {
 						theirAnswerIndex = j;
 						break;
 					}
@@ -60,10 +64,10 @@ _OKCP.getAnswers = function (doubleTake) {
 
 				//ensure there's an entry for the category count
 				if (!responseCount[category]) responseCount[category] = [0,0];
-
 				responseCount[category][0] += answerScoreWeighted;
 				responseCount[category][1] += answerWeight;
-
+				if (isNaN(responseCount[category][0])) debugger;
+				
 				questionList.push({
 					question: question.text,
 					qid: String(question.id),
@@ -83,12 +87,11 @@ _OKCP.getAnswers = function (doubleTake) {
 	}
 
 	async function loadProfileAnswers() {
-		var userId = ($('.qmcard a')[0] || window.location)
+		var userName = ($('.qmcard a')[0] || window.location)
 			.href.split('/profile/')[1].split('?')[0]
-		userId = await _OKCP.getUserId(userId);
-		var apiAnswers = await _OKCP.getApiAnswers(userId);
+		var userId = await _OKCP.getUserId(userName);
+		var apiAnswers = await _OKCP.getApiAnswers(userId || userName);
 		apiAnswers.forEach(answerObj => loadData(answerObj))
-		console.log({questionList, responseCount});
 		areWeDone(false);
 	}
 
@@ -118,7 +121,6 @@ _OKCP.getAnswers = function (doubleTake) {
 		}
 		$('.match-ratios-list').html('');
 		$('.question-detail > ul').remove();
-		console.log('mrl', {responseCount	});
 		
 		for (var category in responseCount) {
 			var countArr = responseCount[category];

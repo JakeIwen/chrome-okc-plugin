@@ -34,6 +34,7 @@ if (_OKCP.profilePath === '') {
 	_OKCP.onOwnProfile = true;
 }
 
+
 // check to see if any database upgrades or localStorage cleanups are necessary
 (function () {
 	// create a settings object if there isn't one
