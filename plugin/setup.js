@@ -21,7 +21,7 @@ _OKCP.debugTimer = null;
 
 _OKCP.urlSansParameters = location.href.split('?')[0];
 _OKCP.profilePath = _OKCP.urlSansParameters.split("/profile/")[1] || '';
-
+_OKCP.doubleTake = location.href.includes('doubletake');
 _OKCP.profileName = _OKCP.profilePath.split("/")[0];
 _OKCP.clientProfileName = $('#user_header .username').text();
 _OKCP.onOwnProfile = false;

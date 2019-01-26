@@ -1,4 +1,4 @@
-_OKCP.getAnswers = function (list) {
+_OKCP.getAnswers = function (doubleTake) {
 	var numRequestsMade = 0;
 	var numRequestsFinished = 0;
 	var questionList = [];
@@ -9,17 +9,27 @@ _OKCP.getAnswers = function (list) {
 	var questionPath; //for storing the path of the question page as we iterate
 	var requestFailed = false;
 	var recentProfiles = localStorage.okcpRecentProfiles ? JSON.parse(localStorage.okcpRecentProfiles) : {"_ATTENTION":"This is just temporary caching to avoid hitting the server a million times. Notice there's an expires time built in for each key."};
-
-	if (_OKCP.onOwnProfile) { //on own profile
+	if (false && _OKCP.onOwnProfile) { //on own profile
+		
 		log.info('on own profile');
 		$('.spinner').hide();
 		return false;
 	} else {
 		
 	// get list of questions and categories to compare to
-	if (list === undefined) {
-		list = localStorage.okcpDefaultQuestions ? JSON.parse(localStorage.okcpDefaultQuestions).questionsList : {};
-	}
+	
+	var	list = localStorage.okcpDefaultQuestions ? JSON.parse(localStorage.okcpDefaultQuestions).questionsList : {};
+	
+	var dtHref = $('.qmcard a').attr('href');
+	setInterval(() => {
+		var newDtHref = $('.qmcard a').attr('href');
+		if(dtHref !== newDtHref){
+			dtHref = newDtHref;
+			$('.match-ratios-list').html('')
+			loadProfileAnswers();
+		}
+	}, 1000)
+	
 
 	loadProfileAnswers();
 
@@ -73,7 +83,9 @@ _OKCP.getAnswers = function (list) {
 	}
 
 	async function loadProfileAnswers() {
-		var userId = window.location.href.split('/profile/')[1].split('?')[0]
+		var userId = ($('.qmcard a')[0] || window.location)
+			.href.split('/profile/')[1].split('?')[0]
+		userId = await _OKCP.getUserId(userId);
 		var apiAnswers = await _OKCP.getApiAnswers(userId);
 		apiAnswers.forEach(answerObj => loadData(answerObj))
 		console.log({questionList, responseCount});
@@ -128,7 +140,6 @@ _OKCP.getAnswers = function (list) {
 			var denominatorArr = denominator.split('.');
 			if (denominator*1 <= 0.5) continue;
 			var matchRatioHtmlValue = '<span class="integer">' + numeratorArr[0] + '</span><span class="point">.</span><span class="decimal">'+(numeratorArr[1] || '0')+'</span><span class="slash">/</span><span class="integer">' + denominatorArr[0] + '</span><span class="point">.</span><span class="decimal">'+(denominatorArr[1] || '0')+'</span>';
-			console.log('mrhtmlrv', matchRatioHtmlValue);
 			$('<li class="match-ratio ' + matchClass + '" category="'+category+'"><span class="match-ratio-progressbar ' + matchClass + '" style="width:' + (Math.round(countArr[0]/countArr[1]*93)+7) + '%"></span><span class="match-ratio-category">' + categoryReadable + '</span><span class="match-ratio-value">' + matchRatioHtmlValue + '</span></li>')
 				.appendTo('.match-ratios-list')
 				.hover(function(e){

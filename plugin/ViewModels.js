@@ -1,11 +1,13 @@
 (function() {
 	// if we're not on a profile page, return early
-	if (_OKCP.profilePath === '') return false;
-
+	// if (_OKCP.doubleTake || _OKCP.profilePath === '') return false;
+	console.log('START');
 	// decide where to inject our elements
 	var $pageTabMenuParent = $('.actions2015').parent();
 	var $linkBtnsParent = $('#main_content');
-	var $matchPercentageTableParent = $('.profile2015-header > .inner');
+	var $matchPercentageTableParent = $('.profile2015-header > .inner').length
+		? $('.profile2015-header > .inner')
+		: $('.qm-content-stackholder > span');
 	var $questionDetailParent = $('.profile2015-content:eq(0)');
 
 	var $divider = $('<div></div>', {'class':'divider'});

@@ -169,6 +169,8 @@ window.Product = Product;
 	var onPageMailbox = $('#p_mailbox').length > 0;
 	var onPageProfile = $('#p_profile').length > 0;
 	var onBrowseMatches = window.location.pathname=='/match';
+	var onDoubleTake = window.location.pathname=='/doubletake';
+	console.log({onDoubleTake});
 	window.onLikes = window.location.pathname=='/who-you-like';
 	
 	try {
@@ -202,7 +204,12 @@ window.Product = Product;
 	// Profile Pages
 	if (onPageProfile) {
 		_OKCP.getAnswers(); // get answers and add categories
-		_OKCP.messageSearch(); // check to see if you've messaged them before
+		// _OKCP.messageSearch(); // check to see if you've messaged them before
+	}
+	
+	if (onDoubleTake) {
+		_OKCP.getAnswers(true); // get answers and add categories
+		// _OKCP.messageSearch(); // check to see if you've messaged them before
 	}
 	
 	if (onBrowseMatches) {

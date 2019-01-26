@@ -17,7 +17,12 @@
   width: 50px;
   cursor: pointer;
 }
-
+.qm-inner{
+  margin: 0 !important;
+}
+.qm-inner .match-ratios-list{
+  max-height: 400px !important;
+}
 .btn {
   cursor: pointer;
 }
