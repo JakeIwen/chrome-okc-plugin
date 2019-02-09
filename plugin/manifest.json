@@ -74,6 +74,8 @@
         "features/messageSearch.js",
         "features/browseMatches.js",
         "features/likes.js",
+        "features/customMatches.js",
+        "features/newApi.js",
         "getAnswers.js",
         "getBrowseAnswers.js",
         "getHoverAnswers.js",

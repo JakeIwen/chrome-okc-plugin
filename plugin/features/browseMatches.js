@@ -10,24 +10,73 @@ _OKCP.browseMatches = function() {
   const showBtn = $("<button>Show</button> ")
   const evalBtn = $("<button>Eval</button> ")
   const hideLikedBtn = $("<button>Hide Liked</button> ")
+  const customBtn = $("<button>Custom</button> ")
+  const moreBtn = $("<button>More</button> ")
+  const setPassBtn = $("<button>Set Passes</button> ")
   
   const removeLiked = false;
   let show = false;
   const cards = [];
-  
+  let customCards = [];
+  let matches = []
+  let total_matches;
   const cardIds = []
+  
+  let after = null;
   setInterval(()=>console.log({cards}), 3000)
   var passIvl = setPassIvl();
   
   _OKCP.createStorageControl('okcpAutoscroll', 'Autoscroll matches', 'body', 'auto-scroll', true)
   var ivl = setInterval(() => localStorage.okcpAutoscroll==="true" && scrollIfReady(), 1000);
   
+  $(setPassBtn).click(()=>setPasses());
+  $(moreBtn).click(addMoreMatches);
+  
+  async function addMoreMatches(){
+    if(matches.length >= total_matches) return;
+    const res = await _OKCP.getMatches(200, {radius: 300, located_anywhere: 0, after})
+    total_matches = res.total_matches
+    matches = matches.concat(res.matches)
+    after = res.after;
+    $('.match-results-card').remove();
+    
+    console.log('all MATCHES', matches)
+    const newCustomCards = _OKCP.getCustomCards(matches);
+    newCustomCards.forEach(function(card){
+      $(showEl).append(card);
+      $(card).show();
+      _OKCP.getHoverAnswers(card, 'browse');
+    })
+    console.log('full len', $('#showEl').children());
+    setTimeout(()=>setPasses(true), 500)
+    setTimeout(()=>setPasses(true), 3000)
+  }
+  
+  
+  $(customBtn).click(async () => {
+    let res = await _OKCP.getMatches(50, {radius: 300, located_anywhere: 0})
+    matches = matches.concat(res.matches)
+    after = res.after;
+    console.log('MATCHES', matches)
+    customCards = _OKCP.getCustomCards(matches);
+    $('.match-results-card').remove();
+    customCards.forEach(function(card){
+      $(showEl).append(card);
+      $(card).show();
+      _OKCP.getHoverAnswers(card, 'browse');
+    })
+    console.log('full len', $('#showEl').children());
+    setTimeout(()=>setPasses(), 500)
+    setTimeout(()=>setPasses(), 3000)
+    
+  })
   $(hideLikedBtn).click(() =>
     $(`.match-info-liked.okicon.i-star`).closest(`.match-results-card`).hide()
   );
   
   $(evalBtn).click(() => {
-    $("match-ratios-wrapper-outer-hover").remove();
+    $(".match-ratios-wrapper-outer-hover").remove();
+    debugger;
     $('#showEl').children().each(function(){_OKCP.getHoverAnswers(this)})
   })
   
@@ -59,7 +108,7 @@ _OKCP.browseMatches = function() {
     
   })
   
-  $('body').prepend(evalBtn, showBtn, hideLikedBtn);
+  $('body').prepend(evalBtn, showBtn, hideLikedBtn, customBtn, moreBtn, setPassBtn);
   
   function setPassIvl(){
     return setInterval(()=>{
@@ -124,9 +173,7 @@ _OKCP.browseMatches = function() {
       const likedByYou = $(this).find('.match-info-liked.okicon.i-star').length;
       if (removeLiked && likedByYou) return $(this).remove();
       if(!showMode && $('#'+newId+' .match-ratio:visible').length){
-        console.log('IN');
         if(!cardIds.includes(newId)){
-          console.log('adding card');
           $(this).attr('added', true);
           
           var cardToSave = $(this).clone();
@@ -138,7 +185,7 @@ _OKCP.browseMatches = function() {
           cards.push(cardToSave);
           cardIds.push( newId )
         } 
-        console.log('hiding', newId);
+        // console.log('hiding', newId);
         $(this).hide();
         
       }
@@ -201,32 +248,3 @@ _OKCP.getLikePassParams = function(userId, likeBool, userName) {
     }
   }
 }
-
-_OKCP.getApiAnswers = async function(userId){
-  if(!window.ACCESS_TOKEN){
-    await _OKCP.timeout(1000);
-  }
-  let end = false
-  let cursor = '';
-  let answers = [];
-  do{ //must be async because we need to get the cursor from each response
-    let {path, params} = getAnswersParams(userId, cursor)
-    const {data, paging} = await window.OkC.api(path, params);
-    answers.push(...data);
-    cursor = paging.cursors.after;
-    end = paging.end
-  } while(!end)
-  return answers;
-  
-  function getAnswersParams(userId, cursor='') {
-    return {
-      path: `/profile/${userId}/answers?after=${cursor}&_=1548312928968`,
-      params: { api: 1, type: "GET", }
-    }
-  }
-}
-
-_OKCP.timeout = function (ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-

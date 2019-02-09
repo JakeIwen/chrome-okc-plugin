@@ -442,8 +442,8 @@ _OKCP.fileQuestions.sex =
 			},
 			{
 				"qid":"1028",
-				"text":"Is your ideal sex rough or gentle?",
-				"answerText": ["Rough", "Gentle", "I enjoy both equally", "I'm a virgin"],
+				"text":"Do you prefer sex rough or gentle?",
+				"answerText": ["Rough", "Gentle", "I enjoy both equally"],
 				"score": [1, -1, 1, -1],
 				"weight": [1, 0.5, 1, 1]
 			},
@@ -774,6 +774,13 @@ _OKCP.fileQuestions.sex =
 				"answerText": ["Like to give", "Live to receive", "Like it both ways!","Hate it! / Never tried it"],
 				"score": [1, 1, 1, 0],
 				"weight": [1, 1, 1,1]
+			},
+			{
+				"qid": "114032",
+				"text": "Would you ever consider having anal sex?",
+				"answerText": [ "Yes", "No", "I can't decide", "Only with a weasel" ],
+				"score": [1, 0, 0.3, 0.5],
+				"weight": [1, 1, 1, 0.5]
 			},
 			{ //Added by RAA
 				"qid":"49345",

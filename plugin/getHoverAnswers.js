@@ -7,20 +7,27 @@ _OKCP.getHoverAnswers = function ($card) {
 		: {};
 
 	var name = 'usr' + _OKCP.getUserName($card);
-	if ($('.match-ratios-wrapper-outer-hover.'+name).length || name ==="usrundefined" ) {
-		return;
-	}
+	// if ($('.match-ratios-wrapper-outer-hover.'+name).length || name ==="usrundefined" ) {
+	// 	console.log('exists', name);
+	// 	return;
+	// }
 	
 	window['pageQuestions'+name] = [];
 
-	var answers = window.answers;
-
-	console.log('making new');
-	var ratioList = $(`<table class="match-ratios-wrapper-outer-hover hover ${window.onLikes ? 'likes-view' : ''} ${name}"><tr><td class="match-ratios">
+	var answers = window.answers || {};;
+	console.log('gettinghoveranswers');
+	var ratioList = $(answers[name] || `<table class="match-ratios-wrapper-outer-hover hover ${name}"><tr><td class="match-ratios">
 		<ul class="match-ratios-list-hover ${name}"></ul>
 		</td></tr></table>`);
-		
+	if(window.onLikes) $(ratioList).addClass('likes-view')
+	else $(ratioList).removeClass('likes-view')
 	$($($card).find(`.user${window.onLikes ? 'row' : 'card'}-info`)[0]).after(ratioList);
+	
+	if (answers[name]) {
+		return _OKCP.purgeMismatches($card, true);
+	}
+	console.log('making new');
+	
 	window.aUrls = window.aUrls || []; //prevents multiple requests
 	let url = '';
 	let numRequestsMade = 0;
@@ -38,13 +45,18 @@ _OKCP.getHoverAnswers = function ($card) {
 	init();
 	
 	async function init(){
-		var userName = _OKCP.getUserName($card);
-		var userId = await _OKCP.getUserId(userName)
-		var apiAnswers = await _OKCP.getApiAnswers(userId);
-		apiAnswers.forEach(answerObj => loadData(answerObj))
-		console.log({questionList, responseCount});
-		areWeDone(false);
-		saveAnswers();
+		var userId = await _OKCP.getUserId(name.slice(3))  || name.slice(3);
+		// var cached = answers[name];
+		// if(!cached){
+			var apiAnswers = await _OKCP.getApiAnswers(userId);
+			apiAnswers.forEach(answerObj => loadData(answerObj))
+			areWeDone();
+			saveAnswers();
+			
+		// }else {
+			 // $('.match-ratios-list-hover-outer.'+name).html(cached);
+
+		// }
 	}
 	
 	function loadData(answer) {
@@ -97,7 +109,6 @@ _OKCP.getHoverAnswers = function ($card) {
 	}
 	
 	function areWeDone() {
-
 		$('.match-ratios-list-hover.'+name).html('');
 		for (var category in responseCount) {
 			
@@ -125,7 +136,6 @@ _OKCP.getHoverAnswers = function ($card) {
 	}
 	
 	function saveAnswers(){
-		$('.page-results-'+name).remove();
 		removeDupes();
 		var html = ratioList[0].outerHTML;
 		
@@ -137,7 +147,7 @@ _OKCP.getHoverAnswers = function ($card) {
 		}
 		
 		
-		_OKCP.purgeMismatches($card);
+		_OKCP.purgeMismatches($card, true);
 			
 		saveQuestions();
 		
@@ -274,7 +284,7 @@ _OKCP.setFilters = function(){
 														.append(controlDiv, $catFilters, $locWrapper)
 														.hide();
 	
-	$('body').append($filterWrapper);
+	$('#navigation').after($filterWrapper);
 	
 	var questions = _OKCP.parseStorageObject('okcpDefaultQuestions').questionsList;
 	var chosenCats = _OKCP.parseStorageObject('okcpChosenCategories');
@@ -301,7 +311,6 @@ _OKCP.setFilters = function(){
 	var $showFiltersBtn = $(`<a><span class="text"> Custom Filters </span></a>`)
 	$(aList).prepend($showFiltersBtn);
 	$($showFiltersBtn).click(()=>clickToggle());
-	// clickToggle(true);
 	
 	function clickToggle(init){
 		var show = init ? false : window['showOkcpFilters'];
@@ -319,7 +328,8 @@ _OKCP.setFilters = function(){
 
 
 _OKCP.updateLocationsEl = function($filterWrapper){
-	var previousLocs = [...window.domLocations]
+	var previousLocs = window.domLocations ? [...window.domLocations] : [];
+
 	window.domLocations = getDomLocations();
 	if (window.domLocations.length != previousLocs.length) {
 		localStorage['showOkcpFilters'] && _OKCP.populateLocationsEl(window.domLocations);
@@ -353,22 +363,43 @@ _OKCP.populateLocationsEl = function(locations){
 	return $wrapper;
 }
 
-_OKCP.purgeMismatches = function($card){
+_OKCP.purgeMismatches = function($card, save){
 	if (!$card) {
 		$(window.cardSelector).show();
 		return $(window.cardSelector).each(function(){_OKCP.purgeMismatches(this)})
 	}
 	hideCats($card);
+	
 	if (getHideWeakBool()) {
 		var $visCats = $($card).find('.match-ratios-list-hover');
 		if (!$($visCats).children(':visible').not('.not-a-match').length) {
-			return $($card).hide();
+			$($card).hide();
 		} 
 	}
 	
 	var locations = _OKCP.parseStorageObject('okcpChosenLocations');
 	var loc = $($card).find('.userInfo-meta-location')[0].innerHTML.split(', ')[1];
-	if (!(locations[loc] || locations['ALL'])) return $($card).hide();
+	if (!(locations[loc] || locations['ALL'])) $($card).hide();
+	if(save){
+		window.okcpSaved = window.okcpSaved || {};
+		window.okcpSaved[_OKCP.getUserName($card)] = $card;
+	}
+	
+_OKCP.showSaved = function(){
+	const showEl = $('<div id="showEl" style="background-color: #FFFFFF; position: absolute; margin: 50px; padding-top: 50px; overflow-y: scroll; top: 0; z-index: 1000"></div>');
+	$('#main_content').hide();
+	$('body').append(showEl)
+	console.log(window.okcpSaved);
+console.log('appended');
+	for(nameKey in window.okcpSaved){
+		let card = window.okcpSaved[nameKey]
+		$(showEl).append(card);
+		$(card).show()
+		_OKCP.getHoverAnswers(card)
+	}
+	
+}
+	
 	
 	function hideCats($card){
 		if (getShowAllBool()) return;

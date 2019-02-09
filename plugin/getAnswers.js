@@ -1,26 +1,25 @@
 _OKCP.getAnswers = function (doubleTake) {
-	var numRequestsMade = 0;
-	var numRequestsFinished = 0;
 	var questionList = [];
 	var responseCount = {};
-	var responseGood = 0;
 	var response = 0;
-	var questionPageNum = 0; //for iterating over question pages
-	var questionPath; //for storing the path of the question page as we iterate
-	var requestFailed = false;
+	var userNmae = '';
 	var recentProfiles = localStorage.okcpRecentProfiles ? JSON.parse(localStorage.okcpRecentProfiles) : {"_ATTENTION":"This is just temporary caching to avoid hitting the server a million times. Notice there's an expires time built in for each key."};
 	
 	_OKCP.setFilters();
 	
+	async function matches(){
+		var matches = await _OKCP.getMatches({radius: 5000, limit: 100})
+	console.log('MATCHES', matches)
+	debugger;
+	}
 	
-	if (false && _OKCP.onOwnProfile) { //on own profile
-		
+	if (_OKCP.onOwnProfile) { //on own profile
 		log.info('on own profile');
 		$('.spinner').hide();
-		return false;
+		// matches();
+		// return false;
 	} else {
 	
-	// get list of questions and categories to compare to
 	
 	var	list = localStorage.okcpDefaultQuestions ? JSON.parse(localStorage.okcpDefaultQuestions).questionsList : {};
 	
@@ -30,15 +29,38 @@ _OKCP.getAnswers = function (doubleTake) {
 		if(dtHref !== newDtHref){
 			dtHref = newDtHref;
 			$('.match-ratios-list').html('')
+			questionList = [];
+			responseCount = {};
+			console.log('reloading', {newDtHref});
 			loadProfileAnswers();
 		}
-	}, 1000)
+	}, 600)
 	
 
 	loadProfileAnswers();
+	
+	
+	async function loadProfileAnswers() {
+		userName = ($('.qmcard a')[0] || window.location)
+			.href.split('/profile/')[1].split('?')[0]
+		var begUserName = userName;
+		console.log({userName});
+		var userId = await _OKCP.getUserId(userName);
+		// var userId = window.CURRENTUSERID //for own profile.... 
+		
+		var apiAnswers = await _OKCP.getApiAnswers(userId || userName);
+		if(begUserName === userName) {
+			apiAnswers.forEach(answerObj => loadData(answerObj))
+			areWeDone(false);
+		} else {
+			console.log('user swap!');
+		}
+
+	}
 
 	function loadData(answer) {
 		var {target, viewer, question} = answer
+		
 		for (var category in list) {
 			var categoryQuestionList = list[category];
 			
@@ -85,22 +107,10 @@ _OKCP.getAnswers = function (doubleTake) {
 			}
 		}
 	}
-
-	async function loadProfileAnswers() {
-		var userName = ($('.qmcard a')[0] || window.location)
-			.href.split('/profile/')[1].split('?')[0]
-		var userId = await _OKCP.getUserId(userName);
-		var apiAnswers = await _OKCP.getApiAnswers(userId || userName);
-		apiAnswers.forEach(answerObj => loadData(answerObj))
-		areWeDone(false);
-	}
-
-
-
 	// if we're done, it hides the spinner and adds the UI, then sorts the categories
 	function areWeDone(fromCached) {
 		// console.log('from cache '+fromCached);
-		if (fromCached || numRequestsFinished === numRequestsMade) {
+		if (fromCached) {
 			// put this data into localStorage
 			recentProfiles[_OKCP.profileName] = {
 				expires: new Date().getTime() + 600000, // temporarily-cached data expires 10 minutes from being set

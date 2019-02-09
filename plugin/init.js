@@ -170,9 +170,8 @@ window.Product = Product;
 	var onPageProfile = $('#p_profile').length > 0;
 	var onBrowseMatches = window.location.pathname=='/match';
 	var onDoubleTake = window.location.pathname=='/doubletake';
-	console.log({onDoubleTake});
 	window.onLikes = window.location.pathname=='/who-you-like';
-	
+		
 	try {
 			window.answers = JSON.parse(_OKCP.lz().decompress(localStorage.getItem('answers'), {inputEncoding: "StorageBinaryString"}));
 	} catch (e) {
@@ -218,29 +217,27 @@ window.Product = Product;
 	}
 	if (window.onLikes) {
 		window.domLocations = [];
-		console.log('lieks');
 		_OKCP.likes();
 	}
 	console.log('_OKCP', _OKCP);
 	// initialize large thumbnail viewer
 	_OKCP.initThumbViewer();
-	
+	console.log('fq', _OKCP.fileQuestions);
 	function verifyTokenPresence() {
 		window.CURRENTUSERID = "49246541853129158";
-		const settings = localStorage.okcpSettings;
+		window.ACCESS_TOKEN = _OKCP.settings('ACCESS_TOKEN');
 		console.log('at', window.ACCESS_TOKEN);
 		const tokenIsOld = (Date.now()-(localStorage.okcpTokenLastUpdated || 0)) > 60*60*2.75*1000;
-			// window.ACCESS_TOKEN = "1,0,1541391361,0xaef578099279c6;edecbde81f805dba399354d8a452a781fa7e64af";
-		if(true || tokenIsOld || !window.ACCESS_TOKEN) {
+		if(tokenIsOld || !window.ACCESS_TOKEN) {
 			window.OkC.getNewAccessToken().then(tokenres => {
 				console.log('getting new token', tokenres);
-		
-				settings.ACCESS_TOKEN = tokenres.authcode;
+				_OKCP.settings('ACCESS_TOKEN', tokenres.authcode);
 				window.ACCESS_TOKEN = tokenres.authcode;
+				localStorage.ACCESS_TOKEN = tokenres.authcode
 				console.log('at', window.ACCESS_TOKEN);
 				localStorage.okcpTokenLastUpdated = Date.now();
 			});
-		}
+		} 
 	}
 	
 });

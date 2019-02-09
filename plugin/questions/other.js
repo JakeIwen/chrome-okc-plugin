@@ -182,7 +182,7 @@ _OKCP.fileQuestions.other =
 			{
 				"qid": "22021",
 				"text": "Is your ideal match well-off financially (or at the very least someone who has high income potential)?",
-				"answerText": ["Yes, it's very important.", "It's somewhat important.", "It's not very important", "It's not important at all."],
+				"answerText": ["Yes, it's very important.", "Yes, it's somewhat important.", "No, it's not very important.", "No, it's not important at all."],
 				"score": [-1, -0.6, 1, 1]
 			}
 		]

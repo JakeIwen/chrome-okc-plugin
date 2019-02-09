@@ -6,6 +6,7 @@ _OKCP.likes = function() {
   const secondarySortSelector = '.userInfo-username'
   existingNames = [];
   const reverseSort = false;
+  let show = false;
 
   function diff(arr1=[], arr2=[]) {
     var ret = [];
@@ -13,8 +14,43 @@ _OKCP.likes = function() {
       if(arr2.indexOf(arr1[i]) == -1) ret.push(arr1[i]);
     return ret;
   };
+  
+  
+  const showBtn = $("<button>Show</button> ")
+  const evalBtn = $("<button>Eval</button> ")
+  $('body').prepend(evalBtn, showBtn);
+  defineClicks(evalBtn, showBtn);
+  
+  function defineClicks(evalBtn, showBtn){
+    
+    $(evalBtn).click(() => {
+      $(".match-ratios-wrapper-outer-hover").remove();
+      $('#showEl').children().each(function(){_OKCP.getHoverAnswers(this)})
+    })
+    
+    $(showBtn).click(() => {
+      show = !show;
+      if(!show) {
+        $('.button-ctr, #showEl').remove();
+        $('#main_content').show();
+        // ivl = setInterval(() => localStorage.okcpAutoscroll === "true" && scrollIfReady(), 1000);
+        // passIvl = setPassIvl();
+        return;
+      }
+      $('body').children().remove();
+      _OKCP.showSaved();
+      $('body').prepend(evalBtn, showBtn);
+      defineClicks(evalBtn, showBtn);
+      $(evalBtn).click();
+    })
+    
+  }
 
   return true;
+  
+  
+  
+  
 };
 
 _OKCP.modifyCards = function(sorted, newNames){

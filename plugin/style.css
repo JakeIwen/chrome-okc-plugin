@@ -2,6 +2,13 @@
   cursor: pointer;
 }
 
+.userrow-thumb .userthumb-img,
+.userrow-thumb .userthumb-indicator.
+.userrow .mock-link{
+  transform: scale(1.5);
+}
+
+
 #logo .okcp-improved-link {
   position: absolute;
   top: 45px;
@@ -96,17 +103,19 @@
   padding: 5px;
   margin: 15px;
   border-radius: 5px;
+  z-index: 200;
+  
   border: 2px solid gray;
   overflow: scroll;
   
 }
   
 .custom-filter-wrapper{
-  right: 0;
+  z-index: 200;
+  left: 100px;
   background-color: white;
-  z-index: 100;
   top: 65px;
-  border: 2p solid black;
+  border: 2px solid grey;
   max-height: 80%;
   display: flex;
   position: fixed;
@@ -1368,3 +1377,5 @@ div.tabbed_heading ul.page_tabs .okcp-pagetab-labels li {
 
 div.tabbed_heading ul.page_tabs .okcp-pagetab li:hover {
   background-color: #DDD;
+}
+
