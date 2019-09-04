@@ -4,7 +4,7 @@
 
 
 var Path;
-console.log('API INIT', this);
+console.log('API INIT YO', this);
 
 window.OkC = {
 	api_prefix: "/apitun",

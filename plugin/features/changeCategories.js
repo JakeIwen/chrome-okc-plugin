@@ -23,22 +23,15 @@ _OKCP.changeCategories = function() {
 			if ($.inArray(value, currCategories) >= 0) {
 				$('.active-categories').append('<li>' + valueReadable + '</li>');
 			} else {
-				console.log(valueReadable);
 				$('.available-categories').append('<li>' + valueReadable + '</li>');
 			}
 		});
 		$( ".categories-list" ).sortable({
 			connectWith: ".categories-list"
 		}).disableSelection();
-		$('#save-category-changes').click(function(){
-			saveCategoryChanges();
-		});
-		$('#cancel-category-changes').click(function(){
-			hideCategorySorter();
-		});
-		$('#reset-categories').click(function(){
-			resetCategories();
-		});
+		$('#save-category-changes').click(() => saveCategoryChanges());
+		$('#cancel-category-changes').click(() => hideCategorySorter());
+		$('#reset-categories').click(() => resetCategories());
 
 	}
 

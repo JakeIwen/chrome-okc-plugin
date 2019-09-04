@@ -10,9 +10,10 @@ _OKCP.browseMatches = function() {
   const showBtn = $("<button>Show</button> ")
   const evalBtn = $("<button>Eval</button> ")
   const hideLikedBtn = $("<button>Hide Liked</button> ")
-  const customBtn = $("<button>Custom</button> ")
   const moreBtn = $("<button>More</button> ")
   const setPassBtn = $("<button>Set Passes</button> ")
+  const detailsFilterInput = $('<input id="details-filter" placeholder="Details Filter"></input>')
+  const essaysFilterInput = $('<input id="essays-filter" placeholder="Essays Filter"></input>')
   
   const removeLiked = false;
   let show = false;
@@ -21,9 +22,9 @@ _OKCP.browseMatches = function() {
   let matches = []
   let total_matches;
   const cardIds = []
+  var matchParams = localStorage.okcpMatchParams || JSON.stringify(_OKCP.editableMatchParams, null, 2);
   
   let after = null;
-  setInterval(()=>console.log({cards}), 3000)
   var passIvl = setPassIvl();
   
   _OKCP.createStorageControl('okcpAutoscroll', 'Autoscroll matches', 'body', 'auto-scroll', true)
@@ -32,51 +33,54 @@ _OKCP.browseMatches = function() {
   $(setPassBtn).click(()=>setPasses());
   $(moreBtn).click(addMoreMatches);
   
+  const includesMulti = (text, words) => words.some(w => text.toUpperCase().includes(w.toUpperCase()))
+  
+  
   async function addMoreMatches(){
     if(matches.length >= total_matches) return;
-    const res = await _OKCP.getMatches(200, {radius: 300, located_anywhere: 0, after})
+    const mp = JSON.parse(matchParams);
+    localStorage.okcpMatchParams = matchParams;
+    console.log('mp', mp);
+    const res = await _OKCP.getMatches(mp.max, matches.length, {...mp, after})
     total_matches = res.total_matches
     matches = matches.concat(res.matches)
     after = res.after;
     $('.match-results-card').remove();
     
-    console.log('all MATCHES', matches)
-    const newCustomCards = _OKCP.getCustomCards(matches);
-    newCustomCards.forEach(function(card){
+    console.log('all MATCHES of ', total_matches,  matches)
+    let userIds = [];
+    let fMatches = matches.filter(m => {
+      const detailsText = JSON.stringify(m.details || [])
+      const essaysText = JSON.stringify(m.essays || [])
+      const detailsFilterVal = $('#details-filter').val().split(',');
+      const essaysFilterVal = $('#essays-filter').val().split(',');
+      const hasDetailsWord = includesMulti(detailsText, detailsFilterVal)
+      const hasEssaysWord = includesMulti(essaysText, essaysFilterVal)
+      const dupeUser = userIds.includes(m.userid);
+      const ret = hasDetailsWord && hasEssaysWord && !dupeUser
+      userIds.push(m.userid);
+      return ret;
+    })
+
+    const newCustomCards = _OKCP.getCustomCards(fMatches);
+    
+    newCustomCards.forEach(function(card, i){
       $(showEl).append(card);
       $(card).show();
       _OKCP.getHoverAnswers(card, 'browse');
     })
-    console.log('full len', $('#showEl').children());
-    setTimeout(()=>setPasses(true), 500)
-    setTimeout(()=>setPasses(true), 3000)
-  }
-  
-  
-  $(customBtn).click(async () => {
-    let res = await _OKCP.getMatches(50, {radius: 300, located_anywhere: 0})
-    matches = matches.concat(res.matches)
-    after = res.after;
-    console.log('MATCHES', matches)
-    customCards = _OKCP.getCustomCards(matches);
-    $('.match-results-card').remove();
-    customCards.forEach(function(card){
-      $(showEl).append(card);
-      $(card).show();
-      _OKCP.getHoverAnswers(card, 'browse');
-    })
-    console.log('full len', $('#showEl').children());
+    // console.log('full len', $('#showEl').children());
     setTimeout(()=>setPasses(), 500)
     setTimeout(()=>setPasses(), 3000)
-    
-  })
+  }
+
   $(hideLikedBtn).click(() =>
     $(`.match-info-liked.okicon.i-star`).closest(`.match-results-card`).hide()
   );
   
   $(evalBtn).click(() => {
     $(".match-ratios-wrapper-outer-hover").remove();
-    debugger;
+    $(`.match-results-card`).show()
     $('#showEl').children().each(function(){_OKCP.getHoverAnswers(this)})
   })
   
@@ -95,20 +99,26 @@ _OKCP.browseMatches = function() {
     clearInterval(passIvl);
     const showEl = $('<div id="showEl" style="background-color: #FFFFFF; position: absolute; margin: 50px; padding-top: 50px; overflow-y: scroll; top: 0; z-index: 1000"></div>');
     $('#main_content').hide();
-    $('body').append(showEl)
-    cards.forEach(function(card){
-      $(showEl).append(card);
-      $(card).show()
-      _OKCP.getHoverAnswers(card, 'browse')
-    })
-    console.log('full len', $(showEl).children());
-    
-    setTimeout(()=>setPasses(true), 500)
-    setTimeout(()=>setPasses(true), 3000)
+    $('body').append(showEl);
+    addSearchJSON($('body'))
+
     
   })
   
-  $('body').prepend(evalBtn, showBtn, hideLikedBtn, customBtn, moreBtn, setPassBtn);
+  function addSearchJSON($el){
+    const ta = $('<textarea class="params"></textarea>')
+    $($el).append(ta);
+    $(ta).val(matchParams);
+    $(ta).on("change", () => matchParams = $(ta).val())
+      .focus(() => {$(`.match-results-card`).hide()})
+      .blur(() => {$(evalBtn).click(); $(`.match-results-card`).show()})
+      
+  }
+  
+  $('body').prepend(evalBtn, showBtn, hideLikedBtn, moreBtn, setPassBtn, detailsFilterInput, essaysFilterInput);
+  $('#page').remove();
+  $(showBtn).click();
+  
   
   function setPassIvl(){
     return setInterval(()=>{
@@ -122,7 +132,7 @@ _OKCP.browseMatches = function() {
 
   
   function scrollIfReady() {
-    if ($('.usercard-placeholder').length) return;
+    if ($('.usercard-placeholder').length || !$('#page').length) return;
     
     if($('.match-results-error').length) {
       debugger;

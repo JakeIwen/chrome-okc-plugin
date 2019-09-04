@@ -13,13 +13,19 @@ _OKCP.getAnswers = function (doubleTake) {
 	debugger;
 	}
 	
-	if (_OKCP.onOwnProfile) { //on own profile
+	if (false && _OKCP.onOwnProfile) { //on own profile
 		log.info('on own profile');
 		$('.spinner').hide();
 		// matches();
 		// return false;
 	} else {
 	
+	function getLastLogin(){
+		var scriptEl = $('script').filter(function(){ return $(this).text().includes('profileParams')})
+		var dateNum = parseInt($(scriptEl).text().split('lastLogin" : ')[1].split(',')[0])*1000;
+		var loginDate = (new Date(dateNum)).toString().split(' GMT')[0];
+		console.log({loginDate});
+	}
 	
 	var	list = localStorage.okcpDefaultQuestions ? JSON.parse(localStorage.okcpDefaultQuestions).questionsList : {};
 	
@@ -47,6 +53,7 @@ _OKCP.getAnswers = function (doubleTake) {
 		console.log({userName});
 		var userId = await _OKCP.getUserId(userName);
 		// var userId = window.CURRENTUSERID //for own profile.... 
+		// getLastLogin()
 		
 		var apiAnswers = await _OKCP.getApiAnswers(userId || userName);
 		if(begUserName === userName) {

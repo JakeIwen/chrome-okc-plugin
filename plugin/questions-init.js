@@ -36,6 +36,5 @@ for (xx in fullQuestionsList) {
 
 	}
 }
-
 questions.questionsList = _OKCP.filteredQuestionsList;
 localStorage.okcpDefaultQuestions = JSON.stringify(questions);

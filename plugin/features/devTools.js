@@ -10,6 +10,7 @@ if (localStorage.getItem("okcpSuggestMode") == "true")
 if (_OKCP.debugTimerEnabled) {_OKCP.debugTimer = new Date();}
 
 _OKCP.initDevMode = function(){
+  console.log('init dev mode');
 	log.enableAll();
 	$('html').addClass('devmode');
 	_OKCP.cacheEnabled = false;

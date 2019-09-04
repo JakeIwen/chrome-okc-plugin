@@ -5,7 +5,7 @@ _OKCP.getCustomCards = function (userData=[]) {
   function buildCard(u){
     const info = u.userinfo
     const loc = u.location
-
+    
     return `<a class="match-results-card" href="/profile/${u.userid}?cf=regular,matchsearch">
       <div class="usercard">
         <div class="usercard-thumb" data-username="${u.username}" data-profile-popover="true">
@@ -20,6 +20,7 @@ _OKCP.getCustomCards = function (userData=[]) {
           <div class="userInfo-meta">
             <span class="userInfo-meta-location">${loc.formatted.short}</span>
           </div>
+          <div><span class="last-online">${(new Date(u.last_login*1000)).toString().split(' GMT')[0]}</small></div>
         </div>
         <div class="match-info usercard-match-info">
           <div class="match-info-percentage">${u.percentages.match}% / ${u.percentages.enemy}%</div>

@@ -7,10 +7,10 @@ _OKCP.getHoverAnswers = function ($card) {
 		: {};
 
 	var name = 'usr' + _OKCP.getUserName($card);
-	// if ($('.match-ratios-wrapper-outer-hover.'+name).length || name ==="usrundefined" ) {
-	// 	console.log('exists', name);
-	// 	return;
-	// }
+	if ($('.match-ratios-wrapper-outer-hover.'+name).length || name ==="usrundefined" ) {
+		console.log('exists', name);
+		return;
+	}
 	
 	window['pageQuestions'+name] = [];
 
@@ -159,7 +159,6 @@ _OKCP.getHoverAnswers = function ($card) {
 		var savedQuestions = JSON.parse(localStorage.getItem('savedQuestions') || "[]");
 		var questionTexts = savedQuestions.map( q => q.question.text )
 		var existingQuestions = _OKCP.fullQuestionsList.map(q => q.text).sort();
-		console.log({existingQuestions});
 		window['pageQuestions'+name].forEach( (q, i) => {
 			var savedIdx = questionTexts.indexOf(q.text);
 			if (savedIdx == -1) {
@@ -287,6 +286,7 @@ _OKCP.setFilters = function(){
 	$('#navigation').after($filterWrapper);
 	
 	var questions = _OKCP.parseStorageObject('okcpDefaultQuestions').questionsList;
+	console.log({questions});
 	var chosenCats = _OKCP.parseStorageObject('okcpChosenCategories');
 	
 	Object.keys(questions).forEach(category => {
@@ -307,9 +307,10 @@ _OKCP.setFilters = function(){
 		})
 	})
 	
-	var aList = $(`#navigation > div.nav-left > ul > li:nth-child(3)`).empty();
+	var aList = $(`#navigation .upgrade-link`);
 	var $showFiltersBtn = $(`<a><span class="text"> Custom Filters </span></a>`)
-	$(aList).prepend($showFiltersBtn);
+	console.log('alist', aList);
+	$(aList).replaceWith($showFiltersBtn);
 	$($showFiltersBtn).click(()=>clickToggle());
 	
 	function clickToggle(init){
@@ -332,13 +333,14 @@ _OKCP.updateLocationsEl = function($filterWrapper){
 
 	window.domLocations = getDomLocations();
 	if (window.domLocations.length != previousLocs.length) {
-		localStorage['showOkcpFilters'] && _OKCP.populateLocationsEl(window.domLocations);
+		_OKCP.populateLocationsEl(window.domLocations);
 	}
 }
 
 _OKCP.populateLocationsEl = function(locations){
 	
 	var chosenLocations = _OKCP.parseStorageObject('okcpChosenLocations');
+	console.log('CL', chosenLocations);
 	var $wrapper = $('.location-filters');
 	$($wrapper).empty().append(`<h3>Locations</h3>`);
 	locations.forEach(location => {
@@ -378,6 +380,8 @@ _OKCP.purgeMismatches = function($card, save){
 	}
 	
 	var locations = _OKCP.parseStorageObject('okcpChosenLocations');
+	// console.log('CL2', locations);
+	
 	var loc = $($card).find('.userInfo-meta-location')[0].innerHTML.split(', ')[1];
 	if (!(locations[loc] || locations['ALL'])) $($card).hide();
 	if(save){
