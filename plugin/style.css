@@ -95,7 +95,19 @@
   max-height: 153px;
   left: 50%;
   margin-left: 500px;
-  bottom: 35px;
+  overflow-y: scroll;
+  width: 225px;
+  z-index: 0;
+  margin-left: 0;
+  right: 0;
+  left: auto
+}
+
+.qm-content .match-ratios-wrapper-outer {
+  position: absolute;
+  max-height: 153px;
+  left: 50%;
+  margin-left: 500px;
   overflow-y: scroll;
   width: 225px;
   z-index: 0;
@@ -207,8 +219,6 @@
   border-radius: 10px;
 }
 .match-ratios-wrapper-outer-hover.hover.likes-view{
-  right: 125px;
-  max-height: 500px;;
 }
 .match-ratios-wrapper-outer-hover{
   max-height: 225px;
@@ -372,9 +382,10 @@
 /* UI - Question Detail */
 .question-detail {
   position: absolute;
-  top: 0;
+  top: 600px;
   left: auto;
-  right: -270px;
+  /* right: -270px; */
+  right: 0;
   z-index: 110;
   padding: 0 8px 18px;
   max-width: 300px;

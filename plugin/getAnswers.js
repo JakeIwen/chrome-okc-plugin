@@ -1,32 +1,21 @@
-_OKCP.getAnswers = function (doubleTake) {
+_OKCP.getAnswers = function () {
 	var questionList = [];
 	var responseCount = {};
 	var response = 0;
-	var userNmae = '';
+	var userName = '';
 	var recentProfiles = localStorage.okcpRecentProfiles ? JSON.parse(localStorage.okcpRecentProfiles) : {"_ATTENTION":"This is just temporary caching to avoid hitting the server a million times. Notice there's an expires time built in for each key."};
 	
 	_OKCP.setFilters();
-	
-	async function matches(){
-		var matches = await _OKCP.getMatches({radius: 5000, limit: 100})
-	console.log('MATCHES', matches)
-	debugger;
-	}
+
 	
 	if (false && _OKCP.onOwnProfile) { //on own profile
 		log.info('on own profile');
 		$('.spinner').hide();
+		return;
 		// matches();
 		// return false;
-	} else {
-	
-	function getLastLogin(){
-		var scriptEl = $('script').filter(function(){ return $(this).text().includes('profileParams')})
-		var dateNum = parseInt($(scriptEl).text().split('lastLogin" : ')[1].split(',')[0])*1000;
-		var loginDate = (new Date(dateNum)).toString().split(' GMT')[0];
-		console.log({loginDate});
 	}
-	
+	_OKCP.setProfilerParams();
 	var	list = localStorage.okcpDefaultQuestions ? JSON.parse(localStorage.okcpDefaultQuestions).questionsList : {};
 	
 	var dtHref = $('.qmcard a').attr('href');
@@ -42,20 +31,17 @@ _OKCP.getAnswers = function (doubleTake) {
 		}
 	}, 600)
 	
-
 	loadProfileAnswers();
 	
 	
 	async function loadProfileAnswers() {
+		console.log('qmca', $('.qmcard a'));
 		userName = ($('.qmcard a')[0] || window.location)
 			.href.split('/profile/')[1].split('?')[0]
 		var begUserName = userName;
 		console.log({userName});
 		var userId = await _OKCP.getUserId(userName);
-		// var userId = window.CURRENTUSERID //for own profile.... 
-		// getLastLogin()
-		
-		var apiAnswers = await _OKCP.getApiAnswers(userId || userName);
+		var apiAnswers = await _OKCP.getApiAnswers(userId);
 		if(begUserName === userName) {
 			apiAnswers.forEach(answerObj => loadData(answerObj))
 			areWeDone(false);
@@ -234,4 +220,17 @@ _OKCP.clearCachedQuestionData = function() {
 	}
 	localStorage.okcpRecentProfiles = JSON.stringify(recentProfiles);
 }
-};
+
+_OKCP.setProfilerParams = function(){
+	try{
+		var scriptEl = $('script').filter(function(){ return $(this).text().includes('profileParams')})
+		var pJson = scriptEl.text()
+			.match(/var profileParams = .*/g)[0]
+			.slice(20, -1)
+		_OKCP.profileParams = JSON.parse(pJson)
+		console.log('profileParams', _OKCP.profileParams);
+	}catch(e){
+		console.log('couldnt find params', e);
+	}
+
+}

@@ -7,6 +7,7 @@ _OKCP.getHoverAnswers = function ($card) {
 		: {};
 
 	var name = 'usr' + _OKCP.getUserName($card);
+	console.log({name});
 	if ($('.match-ratios-wrapper-outer-hover.'+name).length || name ==="usrundefined" ) {
 		console.log('exists', name);
 		return;
@@ -15,14 +16,14 @@ _OKCP.getHoverAnswers = function ($card) {
 	window['pageQuestions'+name] = [];
 
 	var answers = window.answers || {};;
-	console.log('gettinghoveranswers');
+	
 	var ratioList = $(answers[name] || `<table class="match-ratios-wrapper-outer-hover hover ${name}"><tr><td class="match-ratios">
 		<ul class="match-ratios-list-hover ${name}"></ul>
 		</td></tr></table>`);
 	if(window.onLikes) $(ratioList).addClass('likes-view')
 	else $(ratioList).removeClass('likes-view')
-	$($($card).find(`.user${window.onLikes ? 'row' : 'card'}-info`)[0]).after(ratioList);
-	
+	console.log({ratioList});
+	$($($card).find(`.usercard-info`)[0]).after(ratioList);
 	if (answers[name]) {
 		return _OKCP.purgeMismatches($card, true);
 	}
@@ -45,18 +46,11 @@ _OKCP.getHoverAnswers = function ($card) {
 	init();
 	
 	async function init(){
-		var userId = await _OKCP.getUserId(name.slice(3))  || name.slice(3);
-		// var cached = answers[name];
-		// if(!cached){
-			var apiAnswers = await _OKCP.getApiAnswers(userId);
-			apiAnswers.forEach(answerObj => loadData(answerObj))
-			areWeDone();
-			saveAnswers();
-			
-		// }else {
-			 // $('.match-ratios-list-hover-outer.'+name).html(cached);
-
-		// }
+		var userId = await _OKCP.getUserId(name.slice(3));
+		var apiAnswers = await _OKCP.getApiAnswers(userId);
+		apiAnswers.forEach(answerObj => loadData(answerObj))
+		areWeDone(name);
+		saveAnswers();
 	}
 	
 	function loadData(answer) {
@@ -89,7 +83,7 @@ _OKCP.getHoverAnswers = function ($card) {
 
 				responseCount[category][0] += answerScoreWeighted;
 				responseCount[category][1] += answerWeight;
-
+				if(question.text.includes("amil")) debugger;
 				questionList.push({
 					question: question.text,
 					qid: String(question.id),
@@ -108,8 +102,8 @@ _OKCP.getHoverAnswers = function ($card) {
 		}
 	}
 	
-	function areWeDone() {
-		$('.match-ratios-list-hover.'+name).html('');
+	function areWeDone(userName) {
+		$('.match-ratios-list-hover.'+userName).html('');
 		for (var category in responseCount) {
 			
 			var countArr = responseCount[category];
@@ -251,7 +245,7 @@ _OKCP.createStorageControl = function(storageKey, label, containerSelector, clas
 
 _OKCP.loadHoverOptions = function() {
 	window.existingNames = [];
-	setInterval(_OKCP.updateCards, 1000);
+	setInterval(_OKCP.updateCards, 1500);
   setTimeout(_OKCP.setFilters, 1000)
 }
 
@@ -286,7 +280,6 @@ _OKCP.setFilters = function(){
 	$('#navigation').after($filterWrapper);
 	
 	var questions = _OKCP.parseStorageObject('okcpDefaultQuestions').questionsList;
-	console.log({questions});
 	var chosenCats = _OKCP.parseStorageObject('okcpChosenCategories');
 	
 	Object.keys(questions).forEach(category => {
@@ -309,7 +302,6 @@ _OKCP.setFilters = function(){
 	
 	var aList = $(`#navigation .upgrade-link`);
 	var $showFiltersBtn = $(`<a><span class="text"> Custom Filters </span></a>`)
-	console.log('alist', aList);
 	$(aList).replaceWith($showFiltersBtn);
 	$($showFiltersBtn).click(()=>clickToggle());
 	

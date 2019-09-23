@@ -5,10 +5,10 @@
 	// decide where to inject our elements
 	var $pageTabMenuParent = $('.actions2015').parent();
 	var $linkBtnsParent = $('#main_content');
-	var $matchPercentageTableParent = $('.profile2015-header > .inner').length
-		? $('.profile2015-header > .inner')
+	var $matchPercentageTableParent = $('.profile-userinfo').length
+		? $('.profile-userinfo')
 		: $('.qm-content-stackholder > span');
-	var $questionDetailParent = $('.profile2015-content:eq(0)');
+	var $questionDetailParent = $('.profile-userinfo');
 
 	var $divider = $('<div></div>', {'class':'divider'});
 
@@ -103,6 +103,7 @@
 	$matchPercentageTableParent.append('<table class="match-ratios-wrapper-outer"><tr><td class="match-ratios">'+
 		'<ul class="match-ratios-list"></ul>'+
 		'</td></tr></table>');
+	console.log({$matchPercentageTableParent});
 
 	// UI: Question Detail
 	$questionDetailParent.append('<div class="question-detail"></div>');

@@ -23,7 +23,6 @@ _OKCP.getMatches = async function(max=1000, numExisting=0, searchParams={}){
     total_matches= res.total_matches;
     matches.push(...data);
     if(matches.length === oldLen) {
-      // max = 0;
       console.log('stalling. total matches = ', total_matches);
       await _OKCP.timeout(2500);
     };
@@ -85,8 +84,10 @@ _OKCP.getApiAnswers = async function(userId){
     answers.push(...data);
     cursor = paging.cursors.after;
     end = paging.end;
+    if(end && userId == "12371192137647414140") debugger;
     
   } while(!end)
+  console.log('num answers found', answers.length);
   
   return answers;
   
@@ -99,8 +100,6 @@ _OKCP.defaultMatchParams = {
 "gentation": [
   54
 ],
-"gender_tags": 29645,
-"orientation_tags": 0,
 "minimum_age": 18,
 "maximum_age": 39,
 // "locid": 4356872,

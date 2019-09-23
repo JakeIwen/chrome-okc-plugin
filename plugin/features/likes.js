@@ -1,20 +1,12 @@
 
 _OKCP.likes = function() {
   _OKCP.loadHoverOptions();
-  window.cardSelector = '.userrow'
+  window.cardSelector = '.usercard'
   const primarySortSelector = '.match-info-percentage'
   const secondarySortSelector = '.userInfo-username'
   existingNames = [];
   const reverseSort = false;
   let show = false;
-
-  function diff(arr1=[], arr2=[]) {
-    var ret = [];
-    for(var i in arr1) 
-      if(arr2.indexOf(arr1[i]) == -1) ret.push(arr1[i]);
-    return ret;
-  };
-  
   
   const showBtn = $("<button>Show</button> ")
   const evalBtn = $("<button>Eval</button> ")
@@ -45,10 +37,9 @@ _OKCP.likes = function() {
     })
     
   }
-
   return true;
   
-  
+  _OKCP.updateCards()
   
   
 };
@@ -61,17 +52,17 @@ _OKCP.modifyCards = function(sorted, newNames){
     const thisName = _OKCP.getUserName($card);
 
     if (newNames.includes(thisName)) {
-      if (Object.keys(answers).includes('usr'+thisName)) {
-        _OKCP.getHoverAnswers($card, window.cardSelector)
-      }
+      // if (Object.keys(answers).includes('usr'+thisName)) {
+      //   _OKCP.getHoverAnswers($card)
+      // }
       const href = 'https://www.okcupid.com/profile/'+thisName;
       const aHref = $(`<a class="mock-link" href=${href}></a>`);
       
-      // $(this).find('img').css({height: '100px', width: '100px'});
       $(this).prepend(aHref);
       setPassBtn($card);
       setCardResetBtn($card);
-      $($card).hover(()=>_OKCP.getHoverAnswers($card, window.cardSelector))
+      // $($card).hover(()=>_OKCP.getHoverAnswers($card))
+      _OKCP.getHoverAnswers($card)
     }
   })
   $('.userrows-main').append(sorted);
@@ -117,6 +108,7 @@ _OKCP.updateCards = function(){
   const sort = false;
   
   var els = $(window.cardSelector);
+  
   let newNames = [];
   $(els).each(function(){
     const thisName = _OKCP.getUserName(this);

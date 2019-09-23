@@ -232,8 +232,17 @@ _OKCP.browseMatches = function() {
 
 _OKCP.getUserId = function(userName){
   return new Promise((resolve) => {
+    if((userName.match(/\d/g) || []).length > 17) {
+      console.log('quick id', userName);
+      resolve(userName);
+    }
     const url = `https://www.okcupid.com/profile/${userName}?cf=regular,matchsearch`
-    $('<div></div>').load(url, response => resolve($(response).find('[data-tuid]').attr('data-tuid')))
+    $('<div></div>').load(url, response => {
+      var jsonText = response.split('var profileParams = ')[1].split('}};')[0] + '}}'
+      var profileParams = JSON.parse(jsonText)
+      var userId = profileParams.profile.userid
+      resolve(userId)
+    })
   })
 }
 
