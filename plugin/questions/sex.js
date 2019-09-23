@@ -442,8 +442,8 @@ _OKCP.fileQuestions.sex =
 			},
 			{
 				"qid":"1028",
-				"text":"Do you prefer sex rough or gentle?",
-				"answerText": ["Rough", "Gentle", "I enjoy both equally"],
+				"text":"Is your ideal sex rough or gentle?",
+				"answerText": ["Rough", "Gentle", "I enjoy both equally", "I'm a virgin"],
 				"score": [1, -1, 1, -1],
 				"weight": [1, 0.5, 1, 1]
 			},
@@ -734,8 +734,8 @@ _OKCP.fileQuestions.sex =
 				"qid": "455994",
 				"text": "How do you feel about being restrained during sex with your partner?",
 				"answerText": ["Tie me up, tie me down baby! I'm wet already!", "I would be willing to do it for variety, sure!", "I've never done it, but the idea excites me!", "Definitely not! Next question."],
-				"score": [1, 1, 1, -1],
-				"weight": [1, 0.5, 0.5, 1]
+				"score": [1, 0.5, 1, -1],
+				"weight": [1, 1, 0.5, 1]
 			}, {
 				"qid": "456008",
 				"text": "Your partner suggests a night out at a closed private BDSM club, where you are allowed to use all of the special sex furnishings, such as saw horses, racks, bondage posts, and engage in sex with your partner in front of onlookers. What do you say?",
@@ -766,7 +766,7 @@ _OKCP.fileQuestions.sex =
 				"text":"Under the right circumstances, would you allow a partner to lick your anus?",
 				"answerText": ["Yes.", "No."],
 				"score": [1, -1],
-				"weight": [0.4, 0.4]
+				"weight": [1, 1]
 			},
 			{ //Added by RAA
 				"qid":"81254",
@@ -775,19 +775,12 @@ _OKCP.fileQuestions.sex =
 				"score": [1, 1, 1, 0],
 				"weight": [1, 1, 1,1]
 			},
-			{
-				"qid": "114032",
-				"text": "Would you ever consider having anal sex?",
-				"answerText": [ "Yes", "No", "I can't decide", "Only with a weasel" ],
-				"score": [1, 0, 0.3, 0.5],
-				"weight": [1, 1, 1, 0.5]
-			},
 			{ //Added by RAA
 				"qid":"49345",
-				"text":"Would you consider performing analingus on a partner who asked you to?",
+				"text":"Would you consider performing anilingus on a partner who asked you to?",
 				"answerText": ["Yes.","No."],
 				"score": [1, -1],
-				"weight": [0.7, 0.4]
+				"weight": [1, 1]
 			}
 		],
 

@@ -226,7 +226,7 @@ _OKCP.fileQuestions.drugs_smokes =
 				"qid":"80",
 				"text":"What's your deal with harder drugs (stuff beyond pot)?",
 				"answerText": ["I do drugs regularly.", "I do drugs occasionally.", "I've done drugs in the past, but no longer.", "I never do drugs."],
-				"score": [1, 1, -1, -1],
+				"score": [-1, -1, 1, 1],
 				"weight": [1, 1, 0.5, 1]
 			},
 			{

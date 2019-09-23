@@ -29,12 +29,6 @@ _OKCP.fileQuestions.demeanor =
 				"answerText": ["Yes", "No"],
 				"score": [-1, 1]
 			},
-			// {
-			// 	"qid":"6689",
-			// 	"text":"Are you quietly angry a lot of the time?",
-			// 	"answerText": ["Yes", "No"],
-			// 	"score": [-1, 1]
-			// },
 			{
 				"qid":"16293",
 				"text":"How's it going?",

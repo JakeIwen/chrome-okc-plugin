@@ -38,16 +38,6 @@ _OKCP.fileQuestions.sexuality_gender =
 				"weight": [1, 1]
 			}
 		],
-		
-		"time-to-intimacy": [
-			{
-				"qid":"24375",
-				"text":"Say you've started seeing someone you really like. As far as you're concerned, how long will it take before you have sex?",
-				"answerText": ["1-2 dates", "3-5 dates", "6 or more dates", "Only after the wedding"],
-				"score": [1, 1, 1, -1],
-				"weight": [1, .5, .25, 1]
-			},
-		],
 
 		//transgender
 		"transgender-open": [
