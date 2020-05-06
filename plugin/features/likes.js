@@ -52,9 +52,7 @@ _OKCP.modifyCards = function(sorted, newNames){
     const thisName = _OKCP.getUserName($card);
 
     if (newNames.includes(thisName)) {
-      // if (Object.keys(answers).includes('usr'+thisName)) {
-      //   _OKCP.getHoverAnswers($card)
-      // }
+
       const href = 'https://www.okcupid.com/profile/'+thisName;
       const aHref = $(`<a class="mock-link" href=${href}></a>`);
       
@@ -65,6 +63,7 @@ _OKCP.modifyCards = function(sorted, newNames){
       _OKCP.getHoverAnswers($card)
     }
   })
+  
   $('.userrows-main').append(sorted);
   
   function setPassBtn($card){
@@ -113,13 +112,22 @@ _OKCP.updateCards = function(){
   $(els).each(function(){
     const thisName = _OKCP.getUserName(this);
     if (!existingNames.includes(thisName)) newNames.push(thisName);
+    let cardEl = $(`[data-username="${thisName}"]`)
+    if($(cardEl).length > 1 && $(cardEl).find(`.usr${thisName}`).length) {
+      $(cardEl).each(function() {
+        if(!$(this).find(`.usr${thisName}`).length) $(this).parent().remove();
+      })
+    };
   })
+
   existingNames = existingNames.concat(newNames);
   if (newNames.length) {
     console.log('updating for ', newNames.length, 'cards');
+    console.log({sort});
     var sorted = sort 
       ? _OKCP.sortJqElements(els, primarySortSelector, secondarySortSelector, reverseSort) 
       : els;
+    
     
     _OKCP.modifyCards(sorted, newNames)
   }

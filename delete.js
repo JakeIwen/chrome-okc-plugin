@@ -1,16 +1,17 @@
-_OKCP.getHoverAnswers = function ($card, screen) {
-	var requiredCategories = getRequiredCats(); 
-	
-	var name = 'usr' + _OKCP.getUserName($card);
-	
-	if(_OKCP.queriedNames.includes(name) && screen !== 'browse') {
-		$($card).remove()
-		return console.log('skipping requery');
-	}
-	_OKCP.queriedNames.push(name)
+_OKCP.getHoverAnswers = function ($card) {
+	var requiredCategories = getRequiredCats();
+	var list = localStorage.okcpDefaultQuestions 
+		? JSON.parse(localStorage.okcpDefaultQuestions).questionsList 
+		: {};
 
+	var name = 'usr' + _OKCP.getUserName($card);
+	(_OKCP.queriedNames)
 	console.log({name});
-	 
+	if ($('.match-ratios-wrapper-outer-hover.'+name).length || name ==="usrundefined" ) {
+		console.log('exists', name);
+		return;
+	}
+	
 	window['pageQuestions'+name] = [];
 
 	var answers = window.answers || {};;
@@ -30,8 +31,10 @@ _OKCP.getHoverAnswers = function ($card, screen) {
 	let url = '';
 	let numRequestsMade = 0;
 	let numRequestsFinished = 0;
+	let questionList = [];
 	let numQuestionPages = 20; // initial value
 	let failed = 0;
+	let responseCount = {};
 	let responseGood = 0;
 	let response = 0;
 	let finished = false;
@@ -39,18 +42,89 @@ _OKCP.getHoverAnswers = function ($card, screen) {
 	let questionPath; //for storing the path of the question page as we iterate
 
 	init();
-	 
+	
 	async function init(){
-		let qList = [];
-		let resCt = {};
-		
 		var userId = await _OKCP.getUserId(name.slice(3));
 		var apiAnswers = await _OKCP.getApiAnswers(userId);
-		
-		apiAnswers.forEach(answer => _OKCP.loadAnswer(answer, qList, resCt));
-		_OKCP.visualizeRatios(qList, resCt, name);
-		
+		apiAnswers.forEach(answerObj => loadData(answerObj))
+		visualizeRatios();
 		saveAnswers();
+	}
+	
+	function loadData(answer) {
+		var {target, viewer, question} = answer
+		for (var category in list) {
+			var categoryQuestionList = list[category];
+			
+			for (var i = 0; i < categoryQuestionList.length; i++) {
+				var listItem = categoryQuestionList[i];
+				
+				if(parseInt(listItem.qid) !== question.id) continue;
+				
+				var theirAnswerIndex, answerScore, answerWeight, answerScoreWeighted;
+				var theirAnswer = question.answers[target.answer];
+				var possibleAnswers = listItem.answerText;
+
+				for (var j = 0; j < possibleAnswers.length; j++) {
+					if (possibleAnswers[j] === theirAnswer) {
+						theirAnswerIndex = j;
+						break;
+					}
+				}
+				answerScore = listItem.score[theirAnswerIndex];
+				answerWeight = listItem.weight ? listItem.weight[theirAnswerIndex] || 0 : 1;
+				if (answerWeight === 0) continue;
+				answerScoreWeighted = ((answerScore+1) / 2) * answerWeight;
+
+				//ensure there's an entry for the category count
+				if (!responseCount[category]) responseCount[category] = [0,0];
+
+				responseCount[category][0] += answerScoreWeighted;
+				responseCount[category][1] += answerWeight;
+				if(question.text.includes("amil")) debugger;
+				questionList.push({
+					question: question.text,
+					qid: String(question.id),
+					theirAnswer: theirAnswer,
+					theirNote: (target.note || {}).note ||'',
+					yourAnswer: question.answers[viewer.answer],
+					yourNote: (viewer.note || {}).note ||'',
+					answerScore: answerScore,
+					answerWeight: answerWeight,
+					answerScoreWeighted: answerScoreWeighted,
+					category: category,
+					categoryReadable: category.split('_').join(' ')
+				});
+				listItem.qid = listItem.qid+"-used";
+			}
+		}
+	}
+	
+	function visualizeRatios() {
+		// $('.match-ratios-list-hover.'+userName).html('');
+		for (var category in responseCount) {
+			
+			var countArr = responseCount[category];
+			var matchClass = 'match-' + Math.floor(countArr[0]/countArr[1]*5);
+			var categoryReadable = category.split('_').join(' ');
+			
+			if (countArr[1] <= 1)  matchClass += ' one-data-point-match';
+			if (countArr[1] >= 10) matchClass += ' more-than-10';
+			if (countArr[0]/countArr[1] <= 0.1) matchClass += ' not-a-match';
+
+			var numerator = Math.round(countArr[0]*10)/10+'';
+			var denominator = Math.round(countArr[1]*10)/10+'';
+			var numeratorArr = numerator.split('.');
+			var denominatorArr = denominator.split('.');
+			
+			if (denominator*1 <= 0.5) continue;
+			
+			var matchRatioHtmlValue = '<span class="integer">' + numeratorArr[0] + '</span><span class="point">.</span><span class="decimal">'+(numeratorArr[1] || '0')+'</span><span class="slash">/</span><span class="integer">' + denominatorArr[0] + '</span><span class="point">.</span><span class="decimal">'+(denominatorArr[1] || '0')+'</span>';
+			
+			$('<li class="match-ratio ' + matchClass + '" category="'+category+'"><span class="match-ratio-progressbar ' + matchClass + '" style="width:' + (Math.round(countArr[0]/countArr[1]*93)+7) + '%"></span><span class="match-ratio-category">' + categoryReadable + '</span><span class="match-ratio-value">' + matchRatioHtmlValue + '</span></li>')
+				.appendTo('.match-ratios-list-hover.'+name)
+				// console.log('appended ', category);
+		}
 	}
 	
 	function saveAnswers(){
@@ -58,10 +132,12 @@ _OKCP.getHoverAnswers = function ($card, screen) {
 		var html = ratioList[0].outerHTML;
 		
 		window.answers[name] = html;
+		
 		if (!(Object.keys(window.answers).length % 4)) {
 			console.log('saving 4 answer sets');
 			_OKCP.saveCompressed('answers', window.answers);
 		}
+		
 		_OKCP.purgeMismatches($card, true);
 			
 		saveQuestions();
@@ -128,7 +204,15 @@ _OKCP.saveCompressed = function(key, value){
 	localStorage.setItem(key, compressed);
 	console.log('saved');
 }
-
+_OKCP.clearCachedQuestionData = function() {
+	console.log("cleared cached question data");
+	var recentProfiles = JSON.parse(localStorage.getItem(okcpRecentProfiles));
+	for (var profile in recentProfiles) {
+		if (profile === "_ATTENTION") continue;
+		delete recentProfiles[profile]; // remove not-recently visited profiles
+	}
+	localStorage.setItem(okcpRecentProfiles, JSON.stringify(recentProfiles));
+};
 
 _OKCP.getUserName = function($card){
 		return $($card).find('[data-username]').attr('data-username');
@@ -189,6 +273,8 @@ _OKCP.setFilters = function(){
 														.append(controlDiv, $catFilters, $locWrapper)
 														.hide();
 	
+	$('#navigation').after($filterWrapper);
+	
 	var questions = _OKCP.parseStorageObject('okcpDefaultQuestions').questionsList;
 	var chosenCats = _OKCP.parseStorageObject('okcpChosenCategories');
 	
@@ -210,19 +296,11 @@ _OKCP.setFilters = function(){
 		})
 	})
 	
+	var aList = $(`.upgrade-link`);
 	var $showFiltersBtn = $(`<a><span class="text"> Custom Filters </span></a>`)
-	
-	setInterval( () => {
-		var aList = $(`.upgrade-link`);
-		if($(aList).length) {
-			$(aList).replaceWith($showFiltersBtn)
-			console.log('replaced');
-			$($showFiltersBtn).click(()=>clickToggle());
-		}
-		if(!$('.custom-filter-wrapper').length) {
-			$('#navigation').after($filterWrapper);
-		}
-	}, 1500)
+	$(aList).replaceWith($showFiltersBtn);
+	console.log('replaced');
+	$($showFiltersBtn).click(()=>clickToggle());
 	
 	function clickToggle(init){
 		var show = init ? false : window['showOkcpFilters'];
@@ -236,6 +314,8 @@ _OKCP.setFilters = function(){
 	setInterval(()=>_OKCP.updateLocationsEl($filterWrapper), 2000);
 
 }
+
+
 
 _OKCP.updateLocationsEl = function($filterWrapper){
 	var previousLocs = window.domLocations ? [...window.domLocations] : [];
@@ -301,6 +381,7 @@ _OKCP.purgeMismatches = function($card, save){
 	
 	function hideCats($card){
 		if (getShowAllBool()) return;
+		console.log('hiding cats');
 		var requiredCategories = getRequiredCats();
 		$($card).find(`.match-ratio-category`).each(function(){
 			var domName = this.innerHTML;

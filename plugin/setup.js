@@ -3,13 +3,8 @@ $ = jQuery;
 // Initial setup
 var _OKCP = {};
 
-
-$('<span class="okcp-improved-link">Improved!</span>').appendTo('#logo')
-	.click(function(){
-		window.open('http://chrome.google.com/webstore/detail/cgdblghohnaeeejaoincmbcdkdnodkei/','_blank');
-	});
-
 _OKCP.fileQuestions = {};
+_OKCP.queriedNames = [];
 
 _OKCP.questionFetchingMethod = "mobile_app"; //alt value is "original", but that code is almost certainly broken. (currently it's commented out)
 _OKCP.largeThumbSize = '250';
@@ -26,7 +21,15 @@ _OKCP.profileName = _OKCP.profilePath.split("/")[0];
 _OKCP.clientProfileName = $('#user_header .username').text();
 _OKCP.onOwnProfile = false;
 _OKCP.bodyID = $('body').attr('id');
-_OKCP.pageType = _OKCP.bodyID.split('p_')[1]; //known types are profile, match, mailbox, stalkers, quickmatch / votes / likes, favorites, inactive
+_OKCP.list = localStorage.okcpDefaultQuestions ? JSON.parse(localStorage.okcpDefaultQuestions).questionsList : {}; 
+
+console.log({location});
+var pt = location.pathname.split('/')[1];
+if (pt == 'messages') pt = 'mailbox';
+_OKCP.pageType = pt
+console.log({pt});
+
+// _OKCP.pageType = _OKCP.bodyID.split('p_')[1]; //known types are profile, match, mailbox, stalkers, quickmatch / votes / likes, favorites, inactive
 
 // If we're our own profile
 if (_OKCP.profilePath === '') {

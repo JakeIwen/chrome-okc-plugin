@@ -1,11 +1,13 @@
 
 
 _OKCP.browseMatches = function() {
+  console.log('browsematches');
+  _OKCP.setFilters()
   // return;
   window.cardSelector = ".match-results-card";
   const $likeBtnTemplate = $(`<button name="like" style=transform:scale(0.7) class="btn-ctr"><span class="rating_like">Like</span></button>`)
   const $resetBtnTemplate = $(`<button name="reset" style=transform:scale(0.7) class="btn-ctr"><span class="rating_reset">Reset</span></button>`)
-  const $passBtnTemplate = $(`<button name="pass" style=transform:scale(0.7) class="btn-ctr"><span class="rating_like">Pass</span></button>`)
+  const $passBtnTemplate = $(`<button name="pass" style=transform:scale(0.7) class="btn-ctr"><span class="rating_pass">Pass</span></button>`)
   
   const showBtn = $("<button>Show</button> ")
   const evalBtn = $("<button>Eval</button> ")
@@ -37,7 +39,8 @@ _OKCP.browseMatches = function() {
   
   
   async function addMoreMatches(){
-    if(matches.length >= total_matches) return;
+    console.log(matches.length, total_matches);
+    // if(matches.length >= total_matches) return;
     const mp = JSON.parse(matchParams);
     localStorage.okcpMatchParams = matchParams;
     console.log('mp', mp);
@@ -65,7 +68,7 @@ _OKCP.browseMatches = function() {
     const newCustomCards = _OKCP.getCustomCards(fMatches);
     
     newCustomCards.forEach(function(card, i){
-      $(showEl).append(card);
+      $('#showEl').append(card);
       $(card).show();
       _OKCP.getHoverAnswers(card, 'browse');
     })
@@ -81,7 +84,7 @@ _OKCP.browseMatches = function() {
   $(evalBtn).click(() => {
     $(".match-ratios-wrapper-outer-hover").remove();
     $(`.match-results-card`).show()
-    $('#showEl').children().each(function(){_OKCP.getHoverAnswers(this)})
+    $('#showEl').children().each(function(){_OKCP.getHoverAnswers(this, 'browse')})
   })
   
   $(showBtn).click(() => {
@@ -100,15 +103,20 @@ _OKCP.browseMatches = function() {
     const showEl = $('<div id="showEl" style="background-color: #FFFFFF; position: absolute; margin: 50px; padding-top: 50px; overflow-y: scroll; top: 0; z-index: 1000"></div>');
     $('#main_content').hide();
     $('body').append(showEl);
-    addSearchJSON($('body'))
-
+    
     
   })
+  setTimeout(() => addSearchJSON($('body')), 3000);
   
   function addSearchJSON($el){
+    console.log('adding search textarea');
     const ta = $('<textarea class="params"></textarea>')
-    $($el).append(ta);
+    $('#main_content').before(ta);
     $(ta).val(matchParams);
+    console.log({matchParams});
+    
+    $('#main_content').hide();
+    
     $(ta).on("change", () => matchParams = $(ta).val())
       .focus(() => {$(`.match-results-card`).hide()})
       .blur(() => {$(evalBtn).click(); $(`.match-results-card`).show()})
@@ -119,6 +127,7 @@ _OKCP.browseMatches = function() {
   $('#page').remove();
   $(showBtn).click();
   
+  $('#main_content').hide();
   
   function setPassIvl(){
     return setInterval(()=>{
@@ -181,6 +190,7 @@ _OKCP.browseMatches = function() {
     $(`${window.cardSelector}${showMode ? '[added]' : ':not([added])'} > :not(.usercard-placeholder)`).parent().each(function(i) {
       const newId = 'usr' + _OKCP.getUserName(this)
       const likedByYou = $(this).find('.match-info-liked.okicon.i-star').length;
+      // console.log({showMode, likedByYou});
       if (removeLiked && likedByYou) return $(this).remove();
       if(!showMode && $('#'+newId+' .match-ratio:visible').length){
         if(!cardIds.includes(newId)){
@@ -194,9 +204,10 @@ _OKCP.browseMatches = function() {
           $(cardToSave).find('.match-ratios-wrapper-outer-hover.' + newId).remove();
           cards.push(cardToSave);
           cardIds.push( newId )
+          console.log({cards,cardIds});
         } 
         // console.log('hiding', newId);
-        $(this).hide();
+        // $(this).hide();
         
       }
       
@@ -222,7 +233,7 @@ _OKCP.browseMatches = function() {
       if(likedByYou) $($likeBtn).attr("disabled", "disabled");
         
       const $btnRow = $('<div class="button-ctr"></div>').append([$likeBtn, $resetBtn, $passBtn]);
-      
+      debugger;
       $(this).find('.userInfo').append($btnRow);
     })
   }
@@ -232,6 +243,8 @@ _OKCP.browseMatches = function() {
 
 _OKCP.getUserId = function(userName){
   return new Promise((resolve) => {
+    resolve(userName)
+    return
     if((userName.match(/\d/g) || []).length > 17) {
       console.log('quick id', userName);
       resolve(userName);
@@ -241,6 +254,7 @@ _OKCP.getUserId = function(userName){
       var jsonText = response.split('var profileParams = ')[1].split('}};')[0] + '}}'
       var profileParams = JSON.parse(jsonText)
       var userId = profileParams.profile.userid
+      console.log({userId});
       resolve(userId)
     })
   })

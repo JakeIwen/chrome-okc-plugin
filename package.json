@@ -16,6 +16,7 @@
     "grunt-open": "^0.2"
   },
   "dependencies": {
+    "eslint": "^6.8.0",
     "underscore": "^1.9.1"
   }
 }

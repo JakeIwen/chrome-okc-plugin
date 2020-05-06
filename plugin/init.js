@@ -7,9 +7,9 @@ $(function(){
 	};
 	
 	class Product {
-	constructor(params) {
-		this.initialize(params);
-	}
+		constructor(params) {
+			this.initialize(params);
+		}
 
 	initialize(params) {
 		if (!params || !params.productid) {
@@ -167,10 +167,10 @@ window.Product = Product;
 	
 	var onPageQuestions = $('#questions').length > 0;
 	var onPageMailbox = $('#p_mailbox').length > 0;
-	var onPageProfile = $('#p_profile').length > 0;
-	var onBrowseMatches = window.location.pathname=='/match';
-	var onDoubleTake = window.location.pathname=='/doubletake';
-	window.onLikes = window.location.pathname=='/who-you-like';
+	var onPageProfile = location.pathname.includes('/profile')
+	var onBrowseMatches = window.location.pathname.includes('/match');
+	window.onDoubleTake = window.location.pathname.includes('/doubletake');
+	window.onLikes = window.location.pathname.includes('/who-you-like');
 		
 	try {
 			window.answers = JSON.parse(_OKCP.lz().decompress(localStorage.getItem('answers'), {inputEncoding: "StorageBinaryString"}));
@@ -206,12 +206,13 @@ window.Product = Product;
 		// _OKCP.messageSearch(); // check to see if you've messaged them before
 	}
 	
-	if (onDoubleTake) {
+	if (window.onDoubleTake) {
 		_OKCP.getAnswers(true); // get answers and add categories
 		// _OKCP.messageSearch(); // check to see if you've messaged them before
 	}
 	
 	if (onBrowseMatches) {
+		console.log('onB');
 		window.domLocations = [];
 		_OKCP.browseMatches();
 	}
