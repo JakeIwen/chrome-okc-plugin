@@ -4,12 +4,16 @@ _OKCP.getMatches = async function(max=1000, numExisting=0, searchParams={}){
   let days = searchParams.days_since_online ;
 
   let matches = [];
-  var dataParams = {
-    ..._OKCP.defaultMatchParams, 
-    ...searchParams
-  }
+  var dataParams = Object.assign(_OKCP.defaultMatchParams, searchParams)
+  
+  dataParams.location = {
+    country_code: 'US',
+    postal_code: dataParams.zip_code,
+    default_radius: dataParams.radius
+}
   
   const params = { api: 1, type: "POST", data: dataParams};
+  console.log({params});
   var after = '';
   let total_matches;
   let oldLen = 0;
@@ -78,13 +82,13 @@ _OKCP.getApiAnswers = async function(userId){
     const {data, paging} = await window.OkC.api(path, params);
 
     if(!data || !paging) {
+      debugger;
       return answers; //bad response: bail. This is very rare. 
     }
     
     answers.push(...data);
     cursor = paging.cursors.after;
     end = paging.end;
-    if(end && userId == "12371192137647414140") debugger;
     
   } while(!end)
   console.log('num answers found', answers.length);
@@ -115,7 +119,7 @@ _OKCP.defaultMatchParams = {
   // "longitude": -10498470,
   // "popularity": 0,
   // "state_name": "Colorado",
-  "default_radius": 25,
+  // "default_radius": 25,
   "country_code": "US",
   // "city_name": "Denver",
   // "density": 40857,
@@ -159,9 +163,10 @@ _OKCP.editableMatchParams = {
   "gender_tags": 29645,
   "minimum_age": 18,
   "maximum_age": 39,
-  "radius": 500,
-  "located_anywhere": 1,
-  "they_want": "men",
+  "zip_code": 55407,
+  "radius": 300,
+  "located_anywhere": 0,
+  "they_want": "everyone | men",
   "monogamy": null,
   "limit": 50,
   "max": 100,

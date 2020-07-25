@@ -1,6 +1,9 @@
-$(function(){
-	window.HeaderBar = {"barFixed":false,"stickyable":true,"pagetop":0,"barleft":0,"isPositioning":false,"isRefreshingPageSize":false}
 
+var t1 = Date.now()
+console.log('FGUVYTFUYTFVUYRTDCVYTDBFUVYTFUTYFUBYTFDVUY');
+$(document).ready(function(){
+	window.HeaderBar = {"barFixed":false,"stickyable":true,"pagetop":0,"barleft":0,"isPositioning":false,"isRefreshingPageSize":false}
+	console.log('ajp', Date.now() - t1);
 	window.HeaderBar.init = function(){return null;}
 	window.OkCanary = () => {
 		window.TheWebsiteOkCupidDotComAppearsToBeFunctioning = true;
@@ -168,12 +171,13 @@ window.Product = Product;
 	var onPageQuestions = $('#questions').length > 0;
 	var onPageMailbox = $('#p_mailbox').length > 0;
 	var onPageProfile = location.pathname.includes('/profile')
-	var onBrowseMatches = window.location.pathname.includes('/match');
+	window.onBrowseMatches = window.location.pathname.includes('/match');
 	window.onDoubleTake = window.location.pathname.includes('/doubletake');
-	window.onLikes = window.location.pathname.includes('/who-you-like');
+	window.onLikes = window.location.pathname=='/who-you-like' || window.location.pathname=='/discovery';
+
 		
 	try {
-			window.answers = JSON.parse(_OKCP.lz().decompress(localStorage.getItem('answers'), {inputEncoding: "StorageBinaryString"}));
+		window.answers = JSON.parse(_OKCP.lz().decompress(localStorage.getItem('answers'), {inputEncoding: "StorageBinaryString"}));
 	} catch (e) {
 		window.answers = JSON.parse(localStorage.getItem('answers') || "{}");
 		console.log('get uncompressed answers');
@@ -187,8 +191,6 @@ window.Product = Product;
 		console.log('if you called `localStorage.clear()` intentionally, it\'s been reassigned to `localStorage.reallyClear()`');
 	}
 
-	if (_OKCP.devmode) _OKCP.initDevMode();
-	
 	// Questions Pages
 	if (onPageQuestions)
 		_OKCP.initSuggestQuestionsFeature(); // question suggestion feature
@@ -211,12 +213,13 @@ window.Product = Product;
 		// _OKCP.messageSearch(); // check to see if you've messaged them before
 	}
 	
-	if (onBrowseMatches) {
+	if (window.onBrowseMatches) {
 		console.log('onB');
 		window.domLocations = [];
 		_OKCP.browseMatches();
 	}
 	if (window.onLikes) {
+		console.log('likes');
 		window.domLocations = [];
 		_OKCP.likes();
 	}

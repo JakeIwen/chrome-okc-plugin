@@ -23,6 +23,10 @@ $(function() {
 	function viewModels() {
 		
 		var $questionDetailParent = $('.profile-content');
+		if (!$questionDetailParent.length) {
+			console.log('using .qm as .question-detail parent');
+			$questionDetailParent = $('.qm')
+		}
 
 		var $divider = $('<div></div>', {'class':'divider'});
 

@@ -15,6 +15,7 @@ _OKCP.browseMatches = function() {
   const moreBtn = $("<button>More</button> ")
   const setPassBtn = $("<button>Set Passes</button> ")
   const detailsFilterInput = $('<input id="details-filter" placeholder="Details Filter"></input>')
+  const notDetailsFilterInput = $('<input id="not-details-filter" placeholder="Not Details"></input>')
   const essaysFilterInput = $('<input id="essays-filter" placeholder="Essays Filter"></input>')
   
   const removeLiked = false;
@@ -37,7 +38,6 @@ _OKCP.browseMatches = function() {
   
   const includesMulti = (text, words) => words.some(w => text.toUpperCase().includes(w.toUpperCase()))
   
-  
   async function addMoreMatches(){
     console.log(matches.length, total_matches);
     // if(matches.length >= total_matches) return;
@@ -55,12 +55,16 @@ _OKCP.browseMatches = function() {
     let fMatches = matches.filter(m => {
       const detailsText = JSON.stringify(m.details || [])
       const essaysText = JSON.stringify(m.essays || [])
-      const detailsFilterVal = $('#details-filter').val().split(',');
-      const essaysFilterVal = $('#essays-filter').val().split(',');
+      const detailsFilterVal = $(detailsFilterInput).val().split(',');
+      const notDetailsFilterVal = $(notDetailsFilterInput).val().split(',');
+      const essaysFilterVal = $(essaysFilterInput).val().split(',');
       const hasDetailsWord = includesMulti(detailsText, detailsFilterVal)
+      const hasNotDetailsWord = includesMulti(detailsText, notDetailsFilterVal)
       const hasEssaysWord = includesMulti(essaysText, essaysFilterVal)
       const dupeUser = userIds.includes(m.userid);
-      const ret = hasDetailsWord && hasEssaysWord && !dupeUser
+      console.log({hasDetailsWord, hasEssaysWord});
+      let ret = hasDetailsWord && hasEssaysWord && !dupeUser;
+      if (hasNotDetailsWord) ret = false;
       userIds.push(m.userid);
       return ret;
     })
@@ -123,7 +127,7 @@ _OKCP.browseMatches = function() {
       
   }
   
-  $('body').prepend(evalBtn, showBtn, hideLikedBtn, moreBtn, setPassBtn, detailsFilterInput, essaysFilterInput);
+  $('body').prepend(evalBtn, showBtn, hideLikedBtn, moreBtn, setPassBtn, detailsFilterInput, notDetailsFilterInput, essaysFilterInput);
   $('#page').remove();
   $(showBtn).click();
   
@@ -172,7 +176,7 @@ _OKCP.browseMatches = function() {
       
       window.OkC.api(path, params).then(res => {
         console.log('res', res);
-        if (res.results[0].mutual_like) {
+        if (val && res.results[0].mutual_like) {
           $($card).css({backgroundColor: 'green'})
           console.log('MUTUAL LIKE');
         } else if (val){

@@ -1,11 +1,12 @@
-_OKCP.getHoverAnswers = function ($card, screen) {
-	var requiredCategories = getRequiredCats(); 
-	
+_OKCP.getHoverAnswers = function ($card, screen, isHover) {
 	var name = 'usr' + _OKCP.getUserName($card);
 	
-	if(_OKCP.queriedNames.includes(name) && screen !== 'browse') {
+	if(!isHover && _OKCP.queriedNames.includes(name) && screen !== 'browse') {
 		$($card).remove()
 		return console.log('skipping requery');
+	}
+	if($($card).find('.match-ratios-wrapper-outer-hover').length) {
+		return console.log('already has container');
 	}
 	_OKCP.queriedNames.push(name)
 
@@ -13,7 +14,7 @@ _OKCP.getHoverAnswers = function ($card, screen) {
 	 
 	window['pageQuestions'+name] = [];
 
-	var answers = window.answers || {};;
+	var answers = window.answers || {};
 	
 	var ratioList = $(answers[name] || `<table class="match-ratios-wrapper-outer-hover hover ${name}"><tr><td class="match-ratios">
 		<ul class="match-ratios-list-hover ${name}"></ul>
@@ -101,17 +102,14 @@ _OKCP.getHoverAnswers = function ($card, screen) {
 	
 	function removeDupes(){
 		
-		var onBrowseMatches = window.location.pathname=='/match';
-		var onLikes = window.location.pathname=='/who-you-like';
-		
-		if (onLikes) {
+		if (window.onLikes) {
 			var anchorCards = $($card).find('a.userrow-inner');
 			if (anchorCards.length > 1) {
 				$(anchorCards).each(function(idx){
 					if (idx) $(this).remove();
 				})
 			}
-		} else if(onBrowseMatches) {
+		} else if(window.onBrowseMatches) {
 			var matchCards = $($card).find('div.match_card');
 			if (matchCards.length > 1) {
 				// $(matchCards).each(function(idx){
@@ -131,7 +129,7 @@ _OKCP.saveCompressed = function(key, value){
 
 
 _OKCP.getUserName = function($card){
-		return $($card).find('[data-username]').attr('data-username');
+	return $($card).find('[data-profile-popover]').attr('data-profile-popover') || $($card).find('[data-username]').attr('data-username');
 }
 
 _OKCP.createStorageControl = function(storageKey, label, containerSelector, className){
@@ -276,22 +274,18 @@ _OKCP.populateLocationsEl = function(locations){
 
 _OKCP.purgeMismatches = function($card, save){
 	if (!$card) {
-		console.log({$card});
 		$(window.cardSelector).show();
 		return $(window.cardSelector).each(function(){_OKCP.purgeMismatches(this)})
 	}
 	hideCats($card);
 	
 	if (getHideWeakBool()) {
-		var $visCats = $($card).find('.match-ratios-list-hover');
-		if (!$($visCats).children(':visible').not('.not-a-match').length) {
-			$($card).hide();
-		} 
+		var visCats = $($card).find('.match-ratio-category:visible').not('.not-a-match').text();
+		var hasMatch = getRequiredCats().some( rc => visCats.includes(rc))
+		if (!hasMatch) $($card).hide();
 	}
 	
 	var locations = _OKCP.parseStorageObject('okcpChosenLocations');
-	// console.log('CL2', locations);
-	
 	var loc = $($card).find('.userInfo-meta-location')[0].innerHTML.split(', ')[1];
 	if (!(locations[loc] || locations['ALL'])) $($card).hide();
 	if(save){
@@ -301,10 +295,9 @@ _OKCP.purgeMismatches = function($card, save){
 	
 	function hideCats($card){
 		if (getShowAllBool()) return;
-		var requiredCategories = getRequiredCats();
 		$($card).find(`.match-ratio-category`).each(function(){
 			var domName = this.innerHTML;
-			var missingFields = !requiredCategories.some(cat => 
+			var missingFields = !getRequiredCats().some(cat => 
 				spaces(domName).includes(spaces(cat)) || spaces(cat).includes(spaces(domName))
 			)
 			missingFields ? $(this).parent().hide() : $(this).parent().show();

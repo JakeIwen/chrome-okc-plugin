@@ -50,7 +50,8 @@ _OKCP.modifyCards = function(sorted, newNames){
   $(sorted).each(function(){
     const $card = $(this);
     const thisName = _OKCP.getUserName($card);
-
+    console.log({$card});
+    $($card).hover(()=>_OKCP.getHoverAnswers($card, 'likes', true))
     if (newNames.includes(thisName)) {
 
       const href = 'https://www.okcupid.com/profile/'+thisName;
@@ -59,7 +60,6 @@ _OKCP.modifyCards = function(sorted, newNames){
       $(this).prepend(aHref);
       setPassBtn($card);
       setCardResetBtn($card);
-      // $($card).hover(()=>_OKCP.getHoverAnswers($card))
       _OKCP.getHoverAnswers($card)
     }
   })

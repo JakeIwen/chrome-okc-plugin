@@ -8,7 +8,9 @@
   height: 144px !important;
   width: 144px !important;
 }
-
+#footer-cta-container{
+  display: none !important;
+}
 
 .userrows-main > .userrow{
   height: 150px;

@@ -4,35 +4,41 @@ _OKCP.getAnswers = function () {
 	_OKCP.setFilters();
 	_OKCP.setProfilerParams(); 
 	
-	if (window.onDoubleTake) handleDoubletake(); 
+	if (window.onDoubleTake) setTimeout(() => handleDoubletake(), 2000)
 	else setTimeout(() => loadProfileAnswers(), 2000) 
 	 
-	async function loadProfileAnswers() {  
+	async function loadProfileAnswers(dtHref) {  
 		var qList = [];
 		var resCt = {};
 		// console.log('qmca', $('.cardsummary-reflux-profile-link a'));
-		userName = ($('.cardsummary-reflux-profile-link a')[0] || window.location)
-			.href.split('/profile/')[1].split('?')[0]
-			
+		dtHref = dtHref || ($('.cardsummary-profile-link a')[0] || window.location)
+			.href;
+
+		var userName = dtHref.split('/profile/')[1].split('?')[0]
+		console.log({userName});
 		var origUserName = userName;
 		var apiAnswers = await _OKCP.getApiAnswers(userName);
-		
+		console.log({apiAnswers});
 		if(origUserName !== userName) return console.log('user swap!');
 
 		apiAnswers.forEach( answer => _OKCP.loadAnswer(answer, qList, resCt))
 		_OKCP.visualizeRatios(qList, resCt);
-		console.log({userName});
 	}
 
 	function handleDoubletake() {
 		var dtHref = '';
 		setInterval(() => {
-			var newDtHref = $('.cardsummary-reflux-profile-link a').attr('href');
+			var newDtHref = $('.cardsummary-profile-link a').attr('href');
 			if(dtHref !== newDtHref){
 				dtHref = newDtHref;
-				$('.match-ratios-list').html('')
-				console.log('loading doubletake', {newDtHref});
-				loadProfileAnswers();
+				console.log({dtHref, newDtHref});
+				$('.match-ratios-list').remove()
+				var mrl = `<table style="position: absolute; right: 20px;" class="match-ratios-wrapper-outer-hover hover ${name}"><tr><td class="match-ratios">
+					<ul class="match-ratios-list"></ul>
+					</td></tr></table>`;
+					$('.qm').prepend(mrl);
+
+				loadProfileAnswers(dtHref);
 			}
 		}, 600)
 	}
@@ -70,7 +76,6 @@ _OKCP.loadAnswer = function(answer, questionList, responseCount) {
 			if (!responseCount[category]) responseCount[category] = [0,0];
 			responseCount[category][0] += answerScoreWeighted;
 			responseCount[category][1] += answerWeight;
-			if (isNaN(responseCount[category][0])) debugger;
 			
 			questionList.push({
 				question: question.text,
@@ -85,7 +90,7 @@ _OKCP.loadAnswer = function(answer, questionList, responseCount) {
 				category: category,
 				categoryReadable: category.split('_').join(' ')
 			});
-			listItem.qid = listItem.qid+"-used";
+			listItem.qid += "-used";
 		}
 	}
 }
@@ -143,7 +148,7 @@ _OKCP.visualizeRatios = function (questionList, responseCount, name) {
 		}
 		
 	}
-	
+
 	// sort categories
 	$(`${ratioSelector} .match-ratio`).sort(function(a,b) {
 		if ($(b).find('.match-ratio-category').text() === "poly:") return true;
