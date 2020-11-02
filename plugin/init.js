@@ -1,9 +1,6 @@
 
-var t1 = Date.now()
-console.log('FGUVYTFUYTFVUYRTDCVYTDBFUVYTFUTYFUBYTFDVUY');
 $(document).ready(function(){
 	window.HeaderBar = {"barFixed":false,"stickyable":true,"pagetop":0,"barleft":0,"isPositioning":false,"isRefreshingPageSize":false}
-	console.log('ajp', Date.now() - t1);
 	window.HeaderBar.init = function(){return null;}
 	window.OkCanary = () => {
 		window.TheWebsiteOkCupidDotComAppearsToBeFunctioning = true;
@@ -161,20 +158,23 @@ $(document).ready(function(){
 
 window.Product = Product;
 
+_OKCP.$likeBtnTemplate = () => $(`<button name="like" style=transform:scale(0.7) class="btn-ctr"><span class="rating_like">Like</span></button>`)
+_OKCP.$resetBtnTemplate = () => $(`<button name="reset" style=transform:scale(0.7) class="btn-ctr"><span class="rating_reset">Reset</span></button>`)
+_OKCP.$passBtnTemplate = () => $(`<button name="pass" style=transform:scale(0.7) class="btn-ctr"><span class="rating_pass">Pass</span></button>`)
 
 
 // WEBPACK FOOTER //
 // ./src/legacy/products.js
 	
 	verifyTokenPresence();
-	
+	var path = window.location.pathname;
 	var onPageQuestions = $('#questions').length > 0;
 	var onPageMailbox = $('#p_mailbox').length > 0;
-	var onPageProfile = location.pathname.includes('/profile')
-	window.onBrowseMatches = window.location.pathname.includes('/match');
-	window.onDoubleTake = window.location.pathname.includes('/doubletake');
-	window.onLikes = window.location.pathname=='/who-you-like' || window.location.pathname=='/discovery';
-
+	var onPageProfile = path.includes('/profile')
+	window.onLikesYou = path.includes('/who-likes-you');
+	window.onDoubleTake = path.includes('/doubletake') || path.includes('/home');
+	window.onLikes = path=='/who-you-like' || path=='/discovery';
+	
 		
 	try {
 		window.answers = JSON.parse(_OKCP.lz().decompress(localStorage.getItem('answers'), {inputEncoding: "StorageBinaryString"}));
@@ -212,6 +212,12 @@ window.Product = Product;
 		_OKCP.getAnswers(true); // get answers and add categories
 		// _OKCP.messageSearch(); // check to see if you've messaged them before
 	}
+	
+	if (path=='/messages') {
+		_OKCP.mutualLikes(); // get answers and add categories
+		// _OKCP.messageSearch(); // check to see if you've messaged them before
+	}
+	
 	
 	if (window.onBrowseMatches) {
 		console.log('onB');

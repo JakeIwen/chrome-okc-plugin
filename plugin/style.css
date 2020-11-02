@@ -12,6 +12,14 @@
   display: none !important;
 }
 
+.binary_rating_button{
+  z-index: 100 !important;
+}
+
+.discovery-section-content{
+  margin-top: 150px !important;
+}
+
 .userrows-main > .userrow{
   height: 150px;
 }

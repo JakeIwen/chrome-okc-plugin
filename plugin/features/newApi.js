@@ -1,4 +1,150 @@
-
+_OKCP.getMutualLikes = async function(){
+  const mutualLikes = [];
+  const body = {
+    operationName:"getInboxPage",
+    variables:{
+      userid:"49246541853129158",
+      conversationsFilter:"INCOMING",
+    },
+    query: `fragment ArchivedConversationCount on User {
+      conversationCounts {
+        archived
+        __typename
+      }
+      __typename
+    }
+    fragment LikesMutual on User {
+      likesMutual(after: $matchesAfter) {
+        data {
+          senderLikeTime
+          targetLikeTime
+          targetLikeViaSpotlight
+          senderMessageTime
+          targetMessageTime
+          user {
+            id
+            displayname
+            username
+            age
+            primaryImage {
+              id
+              square225
+              __typename
+            }
+            location {
+              summary
+              __typename
+            }
+            isOnline
+            __typename
+          }
+          __typename
+        }
+        pageInfo {
+          hasMore
+          after
+          __typename
+        }
+        __typename
+      }
+      __typename
+    }
+    fragment Conversations on User {
+      notificationCounts {
+        messages
+        __typename
+      }
+      conversations(filter: $conversationsFilter, after: $conversationsAfter) {
+        data {
+          threadid
+          time
+          isUnread
+          sentTime
+          receivedTime
+          correspondent {
+            senderLikeTime
+            targetLikeTime
+            targetLikeViaSpotlight
+            senderMessageTime
+            targetMessageTime
+            matchPercent
+            user {
+              id
+              displayname
+              username
+              age
+              isOnline
+              primaryImage {
+                id
+                square225
+                __typename
+              }
+              __typename
+            }
+            __typename
+          }
+          snippet {
+            text
+            sender {
+              id
+              __typename
+            }
+            __typename
+          }
+          __typename
+        }
+        pageInfo {
+          hasMore
+          after
+          total
+          __typename
+        }
+        __typename
+      }
+      __typename
+    }
+    query getInboxPage($userid: String!, $matchesAfter: String, $conversationsFilter: ConversationFilter!, $conversationsAfter: String) {
+      user(id: $userid) {
+        id
+        ...LikesMutual
+        ...Conversations
+        ...ArchivedConversationCount
+        __typename
+      }
+    }
+  `}
+  let hasMore = false;
+  let matchesAfter;
+  const url = "https://www.okcupid.com/graphql";
+  const buildRequest = (after) => {
+    if (after) body.variables.matchesAfter = after;
+    return {
+      "headers": {
+        "content-type": "application/json",
+      },
+      "referrer": "https://www.okcupid.com/messages",
+      "body": JSON.stringify(body),
+      "method": "POST",
+      "mode": "cors",
+      "credentials": "include"
+    }
+  }
+  
+  do {
+    const response = await fetch(url, buildRequest(matchesAfter));
+    const json = await response.json();
+    if (json.errors) {
+      debugger;
+      return mutualLikes;
+    }
+    const {data, pageInfo} = json.data.user.likesMutual;
+    mutualLikes.push(...data)
+    console.log(mutualLikes.length);
+    hasMore = pageInfo.hasMore;
+    matchesAfter = pageInfo.after;
+  } while (hasMore);
+  return mutualLikes;
+}
 _OKCP.getMatches = async function(max=1000, numExisting=0, searchParams={}){
   //window.ACCESS_TOKEN required for API call
   let days = searchParams.days_since_online ;
@@ -70,88 +216,99 @@ _OKCP.getApiVisitors = async function(){
 //return ALL available questions for a given user
 _OKCP.getApiAnswers = async function(userId){
   //window.ACCESS_TOKEN required for API call
+  var bad = 0;
+  const allAnswers = [...await getLoopFilterAnswers(), ...await getLoopFilterAnswers(10)]
+  console.log('num answers found', allAnswers.length);
+  return bad ? null : allAnswers;
   
-  const answers = [];
-  const params = { api: 1, type: "GET" };
-  let cursor = '';
-  let end = false;
-  
-  do {    //must be async loop to get cursor from each response
+  async function getLoopFilterAnswers(filterNum) {
+    const answers = [];
+    const params = { api: 1, type: "GET" };
+    let cursor = '';
+    let end = false;
+    let filter = filterNum ? `filter=${filterNum}&` : ''
     
-    const path = `/profile/${userId}/answers?after=${cursor}`;
-    const {data, paging} = await window.OkC.api(path, params);
+    do {    //must be async loop to get cursor from each response
+      
+      const path = `/profile/${userId}/answers?${filter}after=${cursor}`;
+      const {data, paging} = await window.OkC.api(path, params);
 
-    if(!data || !paging) {
-      debugger;
-      return answers; //bad response: bail. This is very rare. 
-    }
-    
-    answers.push(...data);
-    cursor = paging.cursors.after;
-    end = paging.end;
-    
-  } while(!end)
-  console.log('num answers found', answers.length);
-  
-  return answers;
+      if(!data || !paging) {
+        console.log(`bad response: bailing on /profile/${userId}/answers?${filter}after=${cursor}`);
+        await _OKCP.timeout(2500);
+        bad++;
+        return answers; //bad response: bail. This is very rare. 
+      }
+      
+      answers.push(...data);
+      cursor = paging.cursors.after;
+      end = paging.end;
+      
+    } while(!end)
+
+    return answers;
+  }
   
 }
 
 _OKCP.timeout = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 _OKCP.defaultMatchParams = {
-"order_by": "MATCH",
-"gentation": [
-  54
-],
-"minimum_age": 18,
-"maximum_age": 39,
-// "locid": 4356872,
-"radius": 500,
-"lquery": "",
-"location": {
-  "postal_code": "55407",
-  // "nameid": 239415,
-  // "display_state": 1,
+  "order_by": "MATCH",
+  "likes": {
+    "mutual_like": 1
+  },
+  "gentation": [
+    54
+  ],
+  "minimum_age": 18,
+  "maximum_age": 39,
   // "locid": 4356872,
-  // "state_code": "CO",
-  // "country_name": "United States",
-  // "longitude": -10498470,
-  // "popularity": 0,
-  // "state_name": "Colorado",
-  // "default_radius": 25,
-  "country_code": "US",
-  // "city_name": "Denver",
-  // "density": 40857,
-  // "metro_area": 2080,
-  // "latitude": 3973915
-},
-"located_anywhere": 1,
-"last_login": 1468800,
-// "i_want": "other",
-"they_want": "men",
-"minimum_height": null,
-"maximum_height": null,
-"languages": 0,
-"speaks_my_language": false,
-"ethnicity": [],
-"religion": [],
-"availability": "any",
-"monogamy": null,
-"looking_for": [],
-"smoking": [],
-"drinking": [],
-"drugs": [],
-"answers": [],
-"interest_ids": [],
-"education": [],
-"children": [],
-"cats": [],
-"dogs": [],
-"tagOrder": [],
-// "after": "NTExNjU2NDc2OTE5NDk1NDI1NiwyMCwyMA==",
-"limit": 50,
-"fields": "userinfo,thumbs,percentages,likes,last_contacts,last_login,online,location,looking_for,answers,details"
+  "radius": 500,
+  "lquery": "",
+  "location": {
+    "postal_code": "55407",
+    // "nameid": 239415,
+    // "display_state": 1,
+    // "locid": 4356872,
+    // "state_code": "CO",
+    // "country_name": "United States",
+    // "longitude": -10498470,
+    // "popularity": 0,
+    // "state_name": "Colorado",
+    // "default_radius": 25,
+    "country_code": "US",
+    // "city_name": "Denver",
+    // "density": 40857,
+    // "metro_area": 2080,
+    // "latitude": 3973915
+  },
+  "located_anywhere": 1,
+  "last_login": 1468800,
+  // "i_want": "other",
+  "they_want": "men",
+  "minimum_height": null,
+  "maximum_height": null,
+  "languages": 0,
+  "speaks_my_language": false,
+  "ethnicity": [],
+  "religion": [],
+  "availability": "any",
+  "monogamy": null,
+  "looking_for": [],
+  "smoking": [],
+  "drinking": [],
+  "drugs": [],
+  "answers": [],
+  "interest_ids": [],
+  "education": [],
+  "children": [],
+  "cats": [],
+  "dogs": [],
+  "tagOrder": [],
+  // "after": "NTExNjU2NDc2OTE5NDk1NDI1NiwyMCwyMA==",
+  "limit": 50,
+  "fields": "userinfo,thumbs,percentages,likes,last_contacts,last_login,online,location,looking_for,answers,details"
 }
 
 _OKCP.editableMatchParams = {

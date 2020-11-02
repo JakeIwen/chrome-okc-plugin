@@ -12,12 +12,14 @@ _OKCP.likes = function() {
   const evalBtn = $("<button>Eval</button> ")
   $('body').prepend(evalBtn, showBtn);
   defineClicks(evalBtn, showBtn);
-  
+
   function defineClicks(evalBtn, showBtn){
     
     $(evalBtn).click(() => {
       $(".match-ratios-wrapper-outer-hover").remove();
-      $('#showEl').children().each(function(){_OKCP.getHoverAnswers(this)})
+      var $card = $(this);
+      
+      $('#showEl').children().each(function(){_OKCP.getHoverAnswers({$card})})
     })
     
     $(showBtn).click(() => {
@@ -44,14 +46,14 @@ _OKCP.likes = function() {
   
 };
 
-_OKCP.modifyCards = function(sorted, newNames){
+_OKCP.modifyCards = function(sorted, newNames=[]){
   const answers = window.answers;
 
   $(sorted).each(function(){
     const $card = $(this);
     const thisName = _OKCP.getUserName($card);
     console.log({$card});
-    $($card).hover(()=>_OKCP.getHoverAnswers($card, 'likes', true))
+    $($card).hover(()=>_OKCP.getHoverAnswers({$card, isHover: true}))
     if (newNames.includes(thisName)) {
 
       const href = 'https://www.okcupid.com/profile/'+thisName;
@@ -60,7 +62,7 @@ _OKCP.modifyCards = function(sorted, newNames){
       $(this).prepend(aHref);
       setPassBtn($card);
       setCardResetBtn($card);
-      _OKCP.getHoverAnswers($card)
+      _OKCP.getHoverAnswers({$card})
     }
   })
   
@@ -68,7 +70,7 @@ _OKCP.modifyCards = function(sorted, newNames){
   
   function setPassBtn($card){
     if ($($card).find('button[name="pass"]').length) return;
-    
+    $($card).parent().removeAttr('href')
     const $btn = $(`<button name="pass" class="binary_rating_button silver flatbutton pass-btn"><i class="icon i-star"></i><span class="rating_like">Pass</span></button>`)
     $($btn).click((event) => {
       event.stopPropagation();

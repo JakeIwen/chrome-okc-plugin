@@ -30,7 +30,7 @@ $(function() {
 
 		var $divider = $('<div></div>', {'class':'divider'});
 
-		$pageTabMenuParent.append(
+		$pageTabMenuParent.append( 
 			$('<ul>', {'class': 'okcp-pagetab okcp-pagetab-nav'}).append(
 				$('<li>', {'class': 'okcp-pagetab-item okcp-pagetab-menu'}).append(
 					$('<a>',{'text':'Plugin Menu'}),

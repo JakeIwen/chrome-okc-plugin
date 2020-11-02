@@ -1,12 +1,12 @@
 _OKCP.getAnswers = function () {
-	var userName = '';
+	var origUserName = '';
 	_OKCP.showSaved();
 	_OKCP.setFilters();
 	_OKCP.setProfilerParams(); 
 	
 	if (window.onDoubleTake) setTimeout(() => handleDoubletake(), 2000)
 	else setTimeout(() => loadProfileAnswers(), 2000) 
-	 
+	
 	async function loadProfileAnswers(dtHref) {  
 		var qList = [];
 		var resCt = {};
@@ -14,9 +14,9 @@ _OKCP.getAnswers = function () {
 		dtHref = dtHref || ($('.cardsummary-profile-link a')[0] || window.location)
 			.href;
 
-		var userName = dtHref.split('/profile/')[1].split('?')[0]
+		let userName = dtHref.split('/profile/')[1].split('?')[0]
 		console.log({userName});
-		var origUserName = userName;
+		origUserName = userName;
 		var apiAnswers = await _OKCP.getApiAnswers(userName);
 		console.log({apiAnswers});
 		if(origUserName !== userName) return console.log('user swap!');
@@ -29,7 +29,7 @@ _OKCP.getAnswers = function () {
 		var dtHref = '';
 		setInterval(() => {
 			var newDtHref = $('.cardsummary-profile-link a').attr('href');
-			if(dtHref !== newDtHref){
+			if(newDtHref && (dtHref !== newDtHref)){
 				dtHref = newDtHref;
 				console.log({dtHref, newDtHref});
 				$('.match-ratios-list').remove()
@@ -37,7 +37,7 @@ _OKCP.getAnswers = function () {
 					<ul class="match-ratios-list"></ul>
 					</td></tr></table>`;
 					$('.qm').prepend(mrl);
-
+				
 				loadProfileAnswers(dtHref);
 			}
 		}, 600)

@@ -1,74 +1,67 @@
-_OKCP.getHoverAnswers = function ($card, screen, isHover) {
-	var name = 'usr' + _OKCP.getUserName($card);
-	
-	if(!isHover && _OKCP.queriedNames.includes(name) && screen !== 'browse') {
+_OKCP.getHoverAnswers = async function ({$card, isHover, userId}) {  
+	var name = 'usr' + (userId || _OKCP.getUserName($card)); 
+	$($card).attr("id", userId);
+	console.log({name});
+	if(!isHover && _OKCP.queriedNames.includes(name)) {
 		$($card).remove()
-		return console.log('skipping requery');
-	}
+		return console.log('skipping requery'); 
+	}  
 	if($($card).find('.match-ratios-wrapper-outer-hover').length) {
 		return console.log('already has container');
-	}
-	_OKCP.queriedNames.push(name)
-
-	console.log({name});
-	 
+	}   
+	_OKCP.queriedNames.push(name) 
+ 
+	console.log({name}); 
+	
 	window['pageQuestions'+name] = [];
 
-	var answers = window.answers || {};
+	var answers = window.answers || {}; 
 	
 	var ratioList = $(answers[name] || `<table class="match-ratios-wrapper-outer-hover hover ${name}"><tr><td class="match-ratios">
 		<ul class="match-ratios-list-hover ${name}"></ul>
 		</td></tr></table>`);
 	if(window.onLikes) $(ratioList).addClass('likes-view')
 	else $(ratioList).removeClass('likes-view')
-	$($($card).find(`.usercard-info`)[0]).after(ratioList);
+	$($($card).find(`.userInfo`)[0]).after(ratioList);
 	if (answers[name]) {
 		return _OKCP.purgeMismatches($card, true);
 	}
 	console.log('making new');
 	
 	window.aUrls = window.aUrls || []; //prevents multiple requests
-	let url = '';
-	let numRequestsMade = 0;
-	let numRequestsFinished = 0;
-	let numQuestionPages = 20; // initial value
-	let failed = 0;
-	let responseGood = 0;
-	let response = 0;
-	let finished = false;
-	let questionPageNum = 0; //for iterating over question pages
-	let questionPath; //for storing the path of the question page as we iterate
 
-	init();
-	 
+	await init();
+	
 	async function init(){
 		let qList = [];
-		let resCt = {};
+		let resCt = {}; 
 		
-		var userId = await _OKCP.getUserId(name.slice(3));
+		var userId = userId || await _OKCP.getUserId(name.slice(3));
 		var apiAnswers = await _OKCP.getApiAnswers(userId);
-		
+		if(!apiAnswers) return;
 		apiAnswers.forEach(answer => _OKCP.loadAnswer(answer, qList, resCt));
 		_OKCP.visualizeRatios(qList, resCt, name);
 		
 		saveAnswers();
+		
+		function saveAnswers(){
+			removeDupes();
+			var html = ratioList[0].outerHTML;
+			
+			window.answers[name] = html;
+			// if (!(Object.keys(window.answers).length % 4)) {
+				// console.log('saving 4 answer sets');
+				_OKCP.saveCompressed('answers', window.answers);
+			// }
+			_OKCP.purgeMismatches($card, true);
+				
+			saveQuestions();
+			
+		}
+		 
 	}
 	
-	function saveAnswers(){
-		removeDupes();
-		var html = ratioList[0].outerHTML;
-		
-		window.answers[name] = html;
-		if (!(Object.keys(window.answers).length % 4)) {
-			console.log('saving 4 answer sets');
-			_OKCP.saveCompressed('answers', window.answers);
-		}
-		_OKCP.purgeMismatches($card, true);
-			
-		saveQuestions();
-		
-	}
-	 
+
 	function saveQuestions(){
 		
 		var savedQuestions = JSON.parse(localStorage.getItem('savedQuestions') || "[]");
@@ -129,7 +122,9 @@ _OKCP.saveCompressed = function(key, value){
 
 
 _OKCP.getUserName = function($card){
-	return $($card).find('[data-profile-popover]').attr('data-profile-popover') || $($card).find('[data-username]').attr('data-username');
+	return $($card).parent().attr('data-profile-popover')
+	 	|| $($card).find('[data-profile-popover]').attr('data-profile-popover')
+		|| $($card).find('[data-username]').attr('data-username');
 }
 
 _OKCP.createStorageControl = function(storageKey, label, containerSelector, className){
@@ -211,7 +206,7 @@ _OKCP.setFilters = function(){
 	var $showFiltersBtn = $(`<a><span class="text"> Custom Filters </span></a>`)
 	
 	setInterval( () => {
-		var aList = $(`.upgrade-link`);
+	 var aList = $(`.upgrade-link`);
 		if($(aList).length) {
 			$(aList).replaceWith($showFiltersBtn)
 			console.log('replaced');
@@ -308,18 +303,18 @@ _OKCP.purgeMismatches = function($card, save){
 
 _OKCP.showSaved = function(){
 	const showEl = $('<div id="showEl" style="background-color: #FFFFFF; position: absolute; margin: 50px; padding-top: 50px; overflow-y: scroll; top: 0; z-index: 1000"></div>');
-	$('#main_content').hide();
+	// $('#main_content').hide();
 	$('body').append(showEl)
-	console.log(window.okcpSaved);
-	console.log('appended');
-	for(nameKey in window.okcpSaved){
-		let card = window.okcpSaved[nameKey]
-		$(showEl).append(card);
-		$(card).show()
-		_OKCP.getHoverAnswers(card)
+	// console.log(window.okcpSaved);
+	// console.log('appended');
+	for(let nameKey in window.okcpSaved){
+		let $card = window.okcpSaved[nameKey]
+		$(showEl).append($card);
+		$($card).show()
+		_OKCP.getHoverAnswers({$card})
 	}
 	
-}
+} 
 	
 
 function getDomLocations(){
